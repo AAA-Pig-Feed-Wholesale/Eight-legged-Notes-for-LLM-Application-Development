@@ -1,8 +1,8 @@
 site_name: 八股文档站
 site_description: 面试八股与大模型应用开发笔记
-site_url: https://your-username.github.io/your-repo-name/
-repo_url: https://github.com/your-username/your-repo-name
-repo_name: your-username/your-repo-name
+site_url: https://AAA-Pig-Feed-Wholesale.github.io/Eight-legged-Notes-for-LLM-Application-Development/
+repo_url: https://github.com/AAA-Pig-Feed-Wholesale/Eight-legged-Notes-for-LLM-Application-Development
+repo_name: AAA-Pig-Feed-Wholesale/Eight-legged-Notes-for-LLM-Application-Development
 
 docs_dir: .
 site_dir: site
