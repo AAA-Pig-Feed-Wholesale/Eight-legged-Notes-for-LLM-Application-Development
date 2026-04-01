@@ -1,219 +1,233 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Serif+SC:wght@500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Lora:ital,wght@0,600;1,600&display=swap");
 
 :root {
-  /* 调色盘优化：增加了一些色彩饱和度的层次 */
-  --md-primary-fg-color: #8b4f31;
-  --md-primary-fg-color--light: #b77855;
-  --md-primary-fg-color--dark: #6d341f;
-  --md-accent-fg-color: #c45e36;
+  /* 现代冷色调调色盘 */
+  --md-primary-fg-color: #0f172a;       /* 深石板蓝 */
+  --md-accent-fg-color: #3b82f6;        /* 活力蓝 */
   
-  --paper-bg: #f7f2e9;
-  --paper-panel: rgba(255, 253, 250, 0.94);
-  --paper-line: rgba(120, 90, 72, 0.12);
-  --paper-text: #2c241f;
-  --paper-muted: #72645a;
-  /* 柔化阴影，增加发散范围 */
-  --paper-shadow: 0 12px 32px -4px rgba(86, 58, 38, 0.08), 0 4px 12px -2px rgba(86, 58, 38, 0.04);
-  --transition-soft: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --bg-main: #ffffff;
+  --bg-subtle: #f8fafc;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: rgba(226, 232, 240, 0.8);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  
+  /* 现代阴影：更轻、更广 */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05);
 }
 
 [data-md-color-scheme="default"] {
-  --md-default-bg-color: var(--paper-bg);
-  --md-default-fg-color: var(--paper-text);
-  --md-default-fg-color--light: #544942;
-  --md-default-fg-color--lighter: #7a6f66;
-  --md-default-fg-color--lightest: rgba(44, 36, 31, 0.06);
-  --md-typeset-a-color: #b04d2c;
+  --md-default-bg-color: var(--bg-main);
+  --md-default-fg-color: var(--text-main);
+  --md-typeset-a-color: var(--md-accent-fg-color);
 }
 
-/* 背景渲染：增加颗粒感纹理模拟纸张 */
+/* 全局背景：极简干净 */
 body {
-  background:
-    radial-gradient(circle at top left, rgba(188, 126, 90, 0.12), transparent 30%),
-    radial-gradient(circle at 90% 15%, rgba(138, 95, 69, 0.1), transparent 25%),
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
-    linear-gradient(180deg, #fbf7f0 0%, var(--paper-bg) 100%);
-  background-blend-mode: normal, normal, overlay, normal;
+  background-color: var(--bg-main);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.03) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.03) 0px, transparent 50%);
 }
 
-/* 导航栏：增加毛玻璃饱和度 */
+/* 导航栏：悬浮玻璃态 */
 .md-header {
-  background: rgba(139, 79, 49, 0.88);
-  backdrop-filter: blur(20px) saturate(120%);
-  -webkit-backdrop-filter: blur(20px) saturate(120%);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
 }
 
-.md-tabs {
-  background: rgba(109, 52, 31, 0.85);
+.md-header__button.md-logo img {
+  filter: grayscale(1); /* 标志黑白化增加高级感 */
 }
 
-/* 侧边栏与内容容器优化 */
-.md-sidebar__inner,
+/* 布局调整 */
+.md-main__inner {
+  margin-top: 2rem;
+}
+
 .md-content__inner {
-  border-radius: 20px;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  padding: 0 2rem !important;
 }
 
+/* 侧边栏：极简无框 */
 .md-sidebar__scrollwrap {
-  background: rgba(255, 252, 247, 0.6);
-  border: 1px solid var(--paper-line);
-  box-shadow: var(--paper-shadow);
-  backdrop-filter: blur(10px);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
-.md-content__inner {
-  background: var(--paper-panel);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: var(--paper-shadow);
-  padding: 2rem 2.5rem !important; /* 增加内边距提升呼吸感 */
-}
-
-/* 文本排版优化：更具阅读性的字号和行高 */
+/* 排版：高端杂志感 */
 .md-typeset {
-  font-size: 0.88rem; /* 略微放大字号 */
-  line-height: 1.75;
-  color: #3d312a;
-}
-
-.md-typeset h1, .md-typeset h2, .md-typeset h3 {
-  font-family: "Noto Serif SC", serif;
-  font-weight: 700;
-  color: #241a15;
-  letter-spacing: -0.02em;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.625;
+  color: #334155;
 }
 
 .md-typeset h1 {
-  font-size: 2.2rem;
-  margin-bottom: 1.5rem;
-  line-height: 1.2;
+  font-weight: 800;
+  font-size: 2.5rem;
+  letter-spacing: -0.04em;
+  color: var(--text-main);
+  margin-bottom: 2rem;
 }
 
 .md-typeset h2 {
-  margin-top: 2.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1.5px solid var(--paper-line); /* 改为下划线更符合出版物习惯 */
+  font-family: "Lora", serif; /* 标题采用衬线点缀 */
+  font-size: 1.5rem;
+  margin-top: 3rem;
+  color: var(--text-main);
+  border: none;
+  display: flex;
+  align-items: center;
 }
 
-/* 引用块优化 */
-.md-typeset blockquote {
-  border-left: 3px solid #b04d2c;
-  background: rgba(176, 77, 44, 0.04);
-  border-radius: 4px 16px 16px 4px;
-  margin: 1.5rem 0;
-  font-style: italic;
-  color: #5a4d44;
+.md-typeset h2::before {
+  content: "";
+  width: 24px;
+  height: 2px;
+  background: var(--md-accent-fg-color);
+  margin-right: 12px;
+  display: inline-block;
 }
 
-/* Hero 区域：更现代的排版布局 */
+/* 代码块优化 */
+.md-typeset pre {
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.md-typeset code {
+  font-family: "JetBrains Mono", monospace;
+  background: var(--bg-subtle);
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+}
+
+/* --- Hero Section: Bento Style 重写 --- */
 .hero-shell {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 2rem;
-  padding: 2.5rem;
-  border-radius: 28px;
-  background: white;
-  border: 1px solid rgba(143, 102, 80, 0.1);
-  box-shadow: 0 30px 60px -12px rgba(86, 58, 38, 0.12);
-  margin-bottom: 3rem;
-  position: relative;
-  overflow: hidden;
+  grid-template-columns: 1.5fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 1.5rem;
+  background: var(--bg-subtle);
+  padding: 3rem;
+  border-radius: 32px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 4rem;
 }
 
-/* 给 Hero 加一个淡雅的装饰元素 */
-.hero-shell::before {
-  content: "";
-  position: absolute;
-  top: -50%; right: -20%;
-  width: 300px; height: 300px;
-  background: radial-gradient(circle, rgba(196, 94, 54, 0.08) 0%, transparent 70%);
-  z-index: 0;
+.hero-copy {
+  grid-row: span 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
-
-.hero-copy { position: relative; z-index: 1; }
 
 .hero-kicker {
-  font-weight: 800;
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 4px 12px;
+  border-radius: 100px;
   font-size: 0.75rem;
-  color: var(--md-accent-fg-color);
-  background: rgba(196, 94, 54, 0.1);
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 6px;
-  margin-bottom: 1rem;
+  font-weight: 600;
+  width: fit-content;
+  margin-bottom: 1.5rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.hero-copy h1 {
+  font-size: 3.5rem !important;
+  line-height: 1.1;
+  margin: 0 0 1.5rem;
 }
 
 .hero-lead {
-  font-size: 1.05rem;
-  line-height: 1.6;
-  opacity: 0.85;
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  max-width: 90%;
 }
 
-/* 按钮交互升级 */
+/* 按钮：药丸形状 & 阴影 */
 .hero-btn {
-  padding: 0.75rem 1.4rem;
-  border-radius: 12px; /* 减小圆角显得更干练 */
-  transition: var(--transition-soft);
-  font-size: 0.9rem;
+  padding: 0.8rem 1.8rem;
+  border-radius: 100px;
+  font-size: 0.95rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hero-btn.primary {
-  background: #8b4f31;
-  box-shadow: 0 4px 15px rgba(139, 79, 49, 0.25);
+  background: var(--text-main);
+  color: white !important;
+  box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.3);
 }
 
 .hero-btn.primary:hover {
-  background: #6d341f;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(139, 79, 49, 0.35);
+  background: #1e293b;
+  box-shadow: 0 15px 30px -10px rgba(15, 23, 42, 0.4);
 }
 
-/* 卡片组优化 */
-.note-card {
+/* 卡片：现代极简流 */
+.stat-card, .note-card {
   background: white;
-  border: 1px solid rgba(143, 102, 80, 0.08);
-  transition: var(--transition-soft);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  border-radius: 20px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
 }
 
 .note-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
   border-color: var(--md-accent-fg-color);
-  box-shadow: 0 20px 40px -10px rgba(86, 58, 38, 0.15);
+}
+
+.note-card h3 {
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
 }
 
 .note-tag {
-  background: #f1ede4;
-  color: #8b4f31;
-  padding: 4px 10px;
-  border-radius: 6px;
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  border: 1px solid var(--border-color);
 }
 
-/* 针对移动端的适配优化 */
+/* 移动端优化 */
 @media screen and (max-width: 60em) {
   .hero-shell {
-    padding: 1.5rem;
     grid-template-columns: 1fr;
-    text-align: center;
+    padding: 2rem;
+    text-align: left;
   }
-  
-  .hero-actions {
-    justify-content: center;
-  }
-  
-  .md-content__inner {
-    padding: 1.2rem !important;
+  .hero-copy h1 {
+    font-size: 2.5rem !important;
   }
 }
 
-/* 滚动条美化 */
-::-webkit-scrollbar {
-  width: 6px;
+/* 针对 MkDocs 元素的微调 */
+.md-nav__link--active {
+  color: var(--md-accent-fg-color) !important;
+  font-weight: 600;
 }
 
-::-webkit-scrollbar-thumb {
-  background-color: rgba(139, 79, 49, 0.2);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(139, 79, 49, 0.4);
+.md-search__form {
+  background-color: var(--bg-subtle) !important;
+  border-radius: 8px !important;
 }
