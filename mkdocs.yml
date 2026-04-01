@@ -4,7 +4,7 @@ site_url: https://AAA-Pig-Feed-Wholesale.github.io/Eight-legged-Notes-for-LLM-Ap
 repo_url: https://github.com/AAA-Pig-Feed-Wholesale/Eight-legged-Notes-for-LLM-Application-Development
 repo_name: AAA-Pig-Feed-Wholesale/Eight-legged-Notes-for-LLM-Application-Development
 
-docs_dir: .
+docs_dir: docs
 site_dir: site
 
 theme:
@@ -53,9 +53,4 @@ nav:
       - 后端八股: 后端八股.md
 
 exclude_docs: |
-  site/
-  __pycache__/
-  .github/
-  docs_site.py
-  启动文档站.bat
-  requirements.txt
+  .gitkeep

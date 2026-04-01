@@ -9,7 +9,7 @@
 - Agent
 - 后端与 Python
 
-仓库已经配置为可直接发布到 `GitHub Pages` 的静态文档站。
+仓库已经配置为可直接发布到 GitHub Pages 的静态文档站。
 
 ## 主要内容
 
@@ -32,9 +32,10 @@
 pip install -r requirements.txt
 ```
 
-启动本地文档站：
+同步文档并启动本地站点：
 
 ```bash
+python sync_docs.py
 mkdocs serve
 ```
 
@@ -48,12 +49,6 @@ http://127.0.0.1:8000
 
 仓库内已经包含 GitHub Actions 工作流，推送到 `main` 分支后即可自动构建和部署。
 
-使用前请先修改 [mkdocs.yml](./mkdocs.yml) 里的仓库配置：
-
-- `site_url`
-- `repo_url`
-- `repo_name`
-
 然后到 GitHub 仓库中执行：
 
 1. 打开 `Settings -> Pages`
@@ -63,11 +58,12 @@ http://127.0.0.1:8000
 部署完成后，站点地址通常为：
 
 ```text
-https://<你的用户名>.github.io/<你的仓库名>/
+https://AAA-Pig-Feed-Wholesale.github.io/Eight-legged-Notes-for-LLM-Application-Development/
 ```
 
 ## 说明
 
 - 当前仓库采用 `MkDocs + Material for MkDocs`
 - 文档内容以 Markdown 形式维护
+- 构建前会通过 `sync_docs.py` 把根目录 Markdown 同步到 `docs/`
 - 修改 Markdown 后需要重新推送，GitHub Pages 才会更新线上内容

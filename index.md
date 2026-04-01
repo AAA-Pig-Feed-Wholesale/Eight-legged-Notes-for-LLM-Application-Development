@@ -19,6 +19,7 @@
 
 ```bash
 pip install -r requirements.txt
+python sync_docs.py
 mkdocs serve
 ```
 
@@ -38,13 +39,9 @@ http://127.0.0.1:8000
 发布成功后，站点地址通常为：
 
 ```text
-https://<你的用户名>.github.io/<你的仓库名>/
+https://AAA-Pig-Feed-Wholesale.github.io/Eight-legged-Notes-for-LLM-Application-Development/
 ```
 
-## 发布前需要改的配置
+## 说明
 
-发布前请把 [mkdocs.yml](/c:/Users/19574/Desktop/八股/mkdocs.yml) 里的下面三项改成你自己的仓库信息：
-
-- `site_url`
-- `repo_url`
-- `repo_name`
+构建前会通过 `sync_docs.py` 把根目录 Markdown 同步到 `docs/`，这样既能满足 MkDocs 的目录要求，也不用改你当前在仓库根目录维护文档的习惯。
