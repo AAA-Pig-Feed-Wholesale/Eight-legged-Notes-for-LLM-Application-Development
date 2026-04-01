@@ -10,17 +10,30 @@ site_dir: site
 theme:
   name: material
   language: zh
+  font:
+    text: IBM Plex Sans
+    code: JetBrains Mono
+  palette:
+    - scheme: default
+      primary: brown
+      accent: deep orange
   features:
     - navigation.tabs
     - navigation.sections
     - navigation.top
     - navigation.expand
+    - navigation.indexes
+    - toc.follow
     - search.suggest
     - search.highlight
     - content.code.copy
+    - content.action.edit
 
 plugins:
   - search
+
+extra_css:
+  - stylesheets/extra.css
 
 markdown_extensions:
   - admonition
