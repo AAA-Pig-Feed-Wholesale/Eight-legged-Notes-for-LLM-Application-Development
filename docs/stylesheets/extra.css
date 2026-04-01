@@ -25,9 +25,9 @@
 }
 
 :root {
-  --bagu-left-width: 17.5rem;
-  --bagu-right-width: 18.5rem;
-  --bagu-handle-width: 12px;
+  --bagu-left-width: 15.5rem;
+  --bagu-right-width: 17rem;
+  --bagu-handle-width: 10px;
 }
 
 /* 全局背景：极简干净 */
@@ -53,14 +53,14 @@ body {
 
 /* 布局调整 */
 .md-main__inner {
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
 
-@media screen and (min-width: 76.25em) {
+@media screen and (min-width: 62em) {
   .md-main__inner {
     max-width: none;
-    margin-left: 1rem;
-    margin-right: 1rem;
+    margin-left: 0.75rem;
+    margin-right: 0.75rem;
     display: grid;
     grid-template-columns:
       minmax(0, var(--bagu-left-width))
@@ -68,7 +68,7 @@ body {
       minmax(0, 1fr)
       var(--bagu-handle-width)
       minmax(0, var(--bagu-right-width));
-    gap: 1rem;
+    gap: 0.75rem;
     align-items: start;
   }
 
@@ -79,6 +79,8 @@ body {
   }
 
   .md-sidebar {
+    display: block;
+    visibility: visible;
     width: auto;
     max-width: none;
   }
@@ -185,6 +187,15 @@ body {
   box-shadow: none;
   border: none;
   padding: 0 1.25rem !important;
+}
+
+body.bagu-home-hero .md-content__inner > h1:first-of-type,
+body.bagu-home-hero .md-content__inner > .md-content__button {
+  display: none;
+}
+
+body.bagu-home-hero .md-content__inner {
+  padding-top: 0 !important;
 }
 
 /* 侧边栏：极简无框 */

@@ -8,8 +8,8 @@
   };
 
   const DEFAULTS = {
-    leftWidth: 280,
-    rightWidth: 300
+    leftWidth: 248,
+    rightWidth: 272
   };
 
   function clamp(value, min, max) {
@@ -17,14 +17,14 @@
   }
 
   function getDesktop() {
-    return window.matchMedia("(min-width: 1220px)").matches;
+    return window.matchMedia("(min-width: 992px)").matches;
   }
 
   function getBounds(side) {
     if (side === "left") {
-      return { min: 220, max: Math.min(420, Math.floor(window.innerWidth * 0.32)) };
+      return { min: 200, max: Math.min(360, Math.floor(window.innerWidth * 0.28)) };
     }
-    return { min: 220, max: Math.min(420, Math.floor(window.innerWidth * 0.34)) };
+    return { min: 220, max: Math.min(380, Math.floor(window.innerWidth * 0.3)) };
   }
 
   function getPageKey() {
@@ -260,6 +260,7 @@
 
   function init() {
     const root = document;
+    document.body.classList.toggle("bagu-home-hero", !!root.querySelector(".hero-shell"));
     ensureLayoutControls(root);
     buildTocTree(root);
     syncActiveToc(root);
