@@ -76,6 +76,8 @@ body {
   .md-sidebar--secondary,
   .md-content {
     margin: 0;
+    grid-row: 1;
+    align-self: start;
   }
 
   .md-sidebar {
@@ -83,6 +85,7 @@ body {
     visibility: visible;
     width: auto;
     max-width: none;
+    height: calc(100vh - 5.6rem);
   }
 
   .md-sidebar--primary {
@@ -123,10 +126,12 @@ body {
 
   .bagu-resize-left {
     grid-column: 2;
+    grid-row: 1;
   }
 
   .bagu-resize-right {
     grid-column: 4;
+    grid-row: 1;
   }
 
   .bagu-sidebar-toggle {
@@ -155,8 +160,13 @@ body {
     position: sticky;
     top: 4.8rem;
     max-height: calc(100vh - 5.6rem);
-    overflow: auto;
+    overflow: hidden;
     padding-top: 2.8rem;
+  }
+
+  .md-sidebar__scrollwrap {
+    height: 100%;
+    overflow: auto;
   }
 
   body.bagu-left-collapsed {

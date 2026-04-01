@@ -18,7 +18,6 @@ theme:
       primary: brown
       accent: deep orange
   features:
-    - navigation.tabs
     - navigation.sections
     - navigation.top
     - navigation.expand
