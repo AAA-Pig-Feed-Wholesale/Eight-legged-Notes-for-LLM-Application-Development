@@ -11,7 +11,7 @@ theme:
   name: material
   language: zh
   font:
-    text: IBM Plex Sans
+    text: Noto Sans SC
     code: JetBrains Mono
   palette:
     - scheme: default
@@ -34,6 +34,9 @@ plugins:
 
 extra_css:
   - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/extra.js
 
 markdown_extensions:
   - admonition
