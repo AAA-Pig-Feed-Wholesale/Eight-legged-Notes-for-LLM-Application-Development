@@ -190,6 +190,86 @@
     saveJSON(STORAGE.tocCollapsed, collapsedState);
   }
 
+  function getHeadingText(heading) {
+    const clone = heading.cloneNode(true);
+    clone.querySelectorAll(".headerlink").forEach((node) => node.remove());
+    return clone.textContent.trim();
+  }
+
+  function collectFallbackHeadings(root) {
+    const content = root.querySelector(".md-content__inner");
+    if (!content) return [];
+
+    return [...content.querySelectorAll("h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]")]
+      .map((heading) => ({
+        level: Number(heading.tagName.slice(1)),
+        id: heading.id,
+        text: getHeadingText(heading),
+        isFirstTitle: heading.matches(".md-content__inner > h1:first-of-type")
+      }))
+      .filter((item) => item.id && item.text && !item.isFirstTitle && item.text !== "目录");
+  }
+
+  function buildHeadingTree(headings) {
+    const root = { level: 0, children: [] };
+    const stack = [root];
+
+    headings.forEach((heading) => {
+      const node = { ...heading, children: [] };
+      while (stack.length > 1 && heading.level <= stack[stack.length - 1].level) {
+        stack.pop();
+      }
+      stack[stack.length - 1].children.push(node);
+      stack.push(node);
+    });
+
+    return root.children;
+  }
+
+  function renderHeadingTree(nodes) {
+    const list = document.createElement("ul");
+    list.className = "md-nav__list";
+
+    nodes.forEach((node) => {
+      const item = document.createElement("li");
+      item.className = "md-nav__item";
+
+      const link = document.createElement("a");
+      link.className = "md-nav__link";
+      link.href = `#${node.id}`;
+      link.textContent = node.text;
+      item.appendChild(link);
+
+      if (node.children.length) {
+        const nav = document.createElement("nav");
+        nav.className = "md-nav";
+        nav.appendChild(renderHeadingTree(node.children));
+        item.appendChild(nav);
+      }
+
+      list.appendChild(item);
+    });
+
+    return list;
+  }
+
+  function ensureFallbackToc(root) {
+    const secondary = root.querySelector(".md-sidebar--secondary");
+    if (!secondary) return;
+
+    const nav = secondary.querySelector(".md-nav--secondary");
+    if (!nav || nav.querySelector(".md-nav__link")) return;
+
+    const headings = collectFallbackHeadings(root);
+    if (!headings.length) return;
+
+    const title = document.createElement("label");
+    title.className = "md-nav__title";
+    title.textContent = "目录";
+
+    nav.replaceChildren(title, renderHeadingTree(buildHeadingTree(headings)));
+  }
+
   function buildTocTree(root) {
     const secondary = root.querySelector(".md-sidebar--secondary");
     if (!secondary) return;
@@ -262,6 +342,7 @@
     const root = document;
     document.body.classList.toggle("bagu-home-hero", !!root.querySelector(".hero-shell"));
     ensureLayoutControls(root);
+    ensureFallbackToc(root);
     buildTocTree(root);
     syncActiveToc(root);
   }
