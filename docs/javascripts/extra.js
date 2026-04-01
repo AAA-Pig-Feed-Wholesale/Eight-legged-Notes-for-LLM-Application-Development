@@ -46,6 +46,7 @@
 
   function applyLayoutState(root) {
     const state = root.__baguState;
+    if (!state) return;
     document.body.classList.toggle("bagu-left-collapsed", !!state.leftCollapsed);
     document.body.classList.toggle("bagu-right-collapsed", !!state.rightCollapsed);
     document.documentElement.style.setProperty("--bagu-left-width", `${state.leftWidth}px`);
@@ -95,8 +96,25 @@
     window.addEventListener("pointerup", onUp);
   }
 
+  function teardownLayoutControls(root) {
+    const inner = root.querySelector(".md-main__inner");
+    if (inner) {
+      inner.querySelectorAll(".bagu-resize-handle").forEach((node) => node.remove());
+      delete inner.dataset.baguLayoutReady;
+    }
+
+    root.querySelectorAll(".bagu-sidebar-toggle").forEach((node) => node.remove());
+    document.body.classList.remove("bagu-left-collapsed", "bagu-right-collapsed");
+    document.documentElement.style.removeProperty("--bagu-left-width");
+    document.documentElement.style.removeProperty("--bagu-right-width");
+    delete root.__baguState;
+  }
+
   function ensureLayoutControls(root) {
-    if (!getDesktop()) return;
+    if (!getDesktop()) {
+      teardownLayoutControls(root);
+      return;
+    }
 
     const inner = root.querySelector(".md-main__inner");
     const primary = root.querySelector(".md-sidebar--primary");
@@ -232,10 +250,19 @@
     nav.dataset.baguTocReady = "1";
   }
 
+  function syncActiveToc(root) {
+    const activeLink = root.querySelector(".md-sidebar--secondary .md-nav--secondary .md-nav__link--active");
+    const activeItem = activeLink?.closest(".bagu-toc-item");
+    if (activeItem) {
+      expandTocAncestors(activeItem);
+    }
+  }
+
   function init() {
     const root = document;
     ensureLayoutControls(root);
     buildTocTree(root);
+    syncActiveToc(root);
   }
 
   document.addEventListener("DOMContentLoaded", init);
@@ -247,6 +274,7 @@
   }
 
   window.addEventListener("resize", () => {
+    ensureLayoutControls(document);
     if (!document.__baguState) return;
     const state = document.__baguState;
     state.leftWidth = clamp(state.leftWidth, getBounds("left").min, getBounds("left").max);

@@ -184,7 +184,7 @@ body {
   background: transparent;
   box-shadow: none;
   border: none;
-  padding: 0 2rem !important;
+  padding: 0 1.25rem !important;
 }
 
 /* 侧边栏：极简无框 */
@@ -246,28 +246,28 @@ body {
 /* 排版：高端杂志感 */
 .md-typeset {
   font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, sans-serif;
-  font-size: 0.94rem;
-  line-height: 1.75;
+  font-size: 0.89rem;
+  line-height: 1.72;
   font-weight: 400;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   color: #334155;
 }
 
 .md-typeset h1 {
   font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
   font-weight: 700;
-  font-size: 2.35rem;
+  font-size: 2rem;
   letter-spacing: -0.02em;
-  line-height: 1.28;
+  line-height: 1.3;
   color: var(--text-main);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .md-typeset h2 {
   font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
-  font-size: 1.45rem;
+  font-size: 1.3rem;
   font-weight: 700;
-  margin-top: 3rem;
+  margin-top: 2.5rem;
   color: var(--text-main);
   border: none;
   display: flex;
@@ -283,9 +283,23 @@ body {
   letter-spacing: 0;
 }
 
+.md-typeset h3 {
+  font-size: 1.08rem;
+}
+
+.md-typeset h4 {
+  font-size: 1rem;
+}
+
+.md-typeset h5,
+.md-typeset h6 {
+  font-size: 0.94rem;
+}
+
 .md-typeset p,
 .md-typeset li {
-  text-align: justify;
+  text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .md-typeset h2::before {
@@ -345,22 +359,38 @@ body {
 }
 
 .hero-copy h1 {
-  font-size: 3.5rem !important;
-  line-height: 1.1;
-  margin: 0 0 1.5rem;
+  font-size: clamp(2.1rem, 4vw, 3rem) !important;
+  line-height: 1.16;
+  margin: 0 0 1.2rem;
 }
 
 .hero-lead {
-  font-size: 1.15rem;
+  font-size: 1rem;
+  line-height: 1.8;
   color: var(--text-muted);
   max-width: 90%;
 }
 
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 1.5rem;
+}
+
 /* 按钮：药丸形状 & 阴影 */
 .hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.8rem 1.8rem;
   border-radius: 100px;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none !important;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text-main) !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -376,6 +406,12 @@ body {
   box-shadow: 0 15px 30px -10px rgba(15, 23, 42, 0.4);
 }
 
+.hero-panel {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
 /* 卡片：现代极简流 */
 .stat-card, .note-card {
   background: white;
@@ -384,6 +420,34 @@ body {
   border-radius: 20px;
   padding: 1.5rem;
   transition: all 0.3s ease;
+}
+
+.stat-label {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.stat-card strong {
+  display: block;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--text-main);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.note-card {
+  display: block;
+  color: inherit !important;
+  text-decoration: none !important;
 }
 
 .note-card:hover {
@@ -395,28 +459,45 @@ body {
 .note-card h3 {
   font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
   font-weight: 600;
-  font-size: 1.15rem;
+  font-size: 1.02rem;
   margin-bottom: 0.5rem;
   line-height: 1.45;
 }
 
 .note-tag {
+  display: inline-flex;
+  align-items: center;
   background: var(--bg-subtle);
   color: var(--text-muted);
   padding: 2px 8px;
   font-size: 0.7rem;
   border: 1px solid var(--border-color);
+  border-radius: 999px;
+  margin-bottom: 0.8rem;
 }
 
 /* 移动端优化 */
 @media screen and (max-width: 60em) {
+  .md-content__inner {
+    padding: 0 0.2rem !important;
+  }
+
   .hero-shell {
     grid-template-columns: 1fr;
     padding: 2rem;
     text-align: left;
   }
+
   .hero-copy h1 {
-    font-size: 2.5rem !important;
+    font-size: 2rem !important;
+  }
+
+  .hero-lead {
+    max-width: none;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr;
   }
 }
 
