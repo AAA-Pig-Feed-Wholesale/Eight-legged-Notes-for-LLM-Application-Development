@@ -1,6 +1,6 @@
 # 八股文档站
 
-这个仓库用于整理大模型应用开发相关的面试八股和学习笔记，内容涵盖：
+这个仓库用于整理大模型应用开发相关的面试八股和学习笔记，内容主要涵盖：
 
 - LLM 基础
 - Prompt 工程
@@ -9,7 +9,7 @@
 - Agent
 - 后端与 Python
 
-仓库已经配置为可直接发布到 GitHub Pages 的静态文档站。
+仓库已经配置为 `MkDocs + Material for MkDocs` 静态文档站。
 
 ## 主要内容
 
@@ -49,7 +49,12 @@ http://127.0.0.1:8000
 
 仓库内已经包含 GitHub Actions 工作流，推送到 `main` 分支后即可自动构建和部署。
 
-然后到 GitHub 仓库中执行：
+发布前需要注意：
+
+- 如果仓库是私有仓库，免费 GitHub 账户通常不能直接启用 GitHub Pages
+- 这种情况下，需要先把仓库改为公开，或者使用支持私有 Pages 的付费方案
+
+如果仓库已经满足 Pages 条件，再到 GitHub 仓库里执行：
 
 1. 打开 `Settings -> Pages`
 2. 在 `Build and deployment` 中选择 `GitHub Actions`
