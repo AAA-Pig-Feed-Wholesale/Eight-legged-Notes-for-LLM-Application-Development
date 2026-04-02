@@ -1,25 +1,24 @@
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@600;700&display=swap");
 
 :root {
-  /* 现代冷色调调色盘 - 进一步优化色彩深度 */
-  --md-primary-fg-color: #0f172a;       
-  --md-accent-fg-color: #3b82f6;        
+  /* 【主题色重构】沉浸式学术风：暖纸色 + 墨绿色/克莱因蓝 */
+  --md-primary-fg-color: #334155;       /* 深石墨灰，降低绝对黑色的刺眼感 */
+  --md-accent-fg-color: #0f766e;        /* 沉稳的深青/墨绿色，学术且克制 */
   
-  --bg-main: #ffffff;
-  --bg-subtle: #f8fafc;
-  --bg-panel: #f3f6fb;
-  --bg-panel-strong: #eef4ff;
-  --bg-warm: #fff7ed;
-  --bg-mint: #eefbf6;
-  --text-main: #1e293b;
-  --text-muted: #64748b;
-  --border-color: rgba(226, 232, 240, 0.8);
-  --glass-bg: rgba(255, 255, 255, 0.8);
+  --bg-main: #fcfcfc;                   /* 极浅的暖纸色，主背景 */
+  --bg-subtle: #f4f4f5;                 /* 燕麦灰，用于侧边栏和外围背景 */
+  --bg-panel: #ffffff;                  /* 纯白卡片底色 */
   
-  /* 提升阴影质感：使用更弥散的现代阴影 */
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.04);
-  --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.03), 0 8px 10px -6px rgb(0 0 0 / 0.03);
+  --text-main: #27272a;                 /* 正文高对比度深灰 */
+  --text-muted: #71717a;                /* 辅助文本 */
+  
+  --border-color: rgba(0, 0, 0, 0.06);  /* 极细微的实体线 */
+  --border-hover: rgba(15, 118, 110, 0.3);
+  
+  /* 阴影重构：更扁平、更收敛的“纸张感”阴影 */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.05);
 }
 
 [data-md-color-scheme="default"] {
@@ -28,130 +27,346 @@
   --md-typeset-a-color: var(--md-accent-fg-color);
 }
 
+/* =========================================
+   1. 核心骨架布局 (严格保留，配合 JS)
+========================================= */
 :root {
-  --bagu-left-width: 16rem;
-  --bagu-right-width: 17.5rem;
-  --bagu-handle-width: 12px;
+  --bagu-left-width: 15.5rem;
+  --bagu-right-width: 17rem;
+  --bagu-handle-width: 12px; /* 稍微加宽一点，更好拖拽 */
 }
 
-/* 全局背景优化 */
 body {
-  background-color: var(--bg-subtle); /* 改为浅灰色背景以衬托白色卡片 */
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.04) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.04) 0px, transparent 50%);
+  background-color: var(--bg-subtle);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* 导航栏：增加毛玻璃强度 */
 .md-header {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(252, 252, 252, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
-/* 正文容器美化：增加白色卡片感 */
+.md-main__inner {
+  margin-top: 1rem;
+}
+
+@media screen and (min-width: 62em) {
+  .md-main__inner {
+    max-width: none;
+    margin-left: 0.75rem;
+    margin-right: 0.75rem;
+    display: grid;
+    grid-template-columns:
+      minmax(0, var(--bagu-left-width))
+      var(--bagu-handle-width)
+      minmax(0, 1fr)
+      var(--bagu-handle-width)
+      minmax(0, var(--bagu-right-width));
+    gap: 0.5rem;
+    align-items: start;
+    transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 平滑折叠动画 */
+  }
+
+  .md-sidebar--primary,
+  .md-sidebar--secondary,
+  .md-content {
+    margin: 0;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .md-sidebar {
+    display: block;
+    visibility: visible;
+    width: auto;
+    max-width: none;
+    height: calc(100vh - 5.6rem);
+    position: sticky;
+    top: 4.8rem;
+    padding-top: 2rem;
+  }
+
+  .md-sidebar--primary { grid-column: 1; }
+  .md-content { grid-column: 3; min-width: 0; }
+  .md-sidebar--secondary { grid-column: 5; }
+
+  /* 拖拽手柄视觉优化：悬浮显形 */
+  .bagu-resize-handle {
+    position: sticky;
+    top: 4.8rem;
+    height: calc(100vh - 5.6rem);
+    cursor: col-resize;
+    background: transparent;
+    display: flex;
+    justify-content: center;
+  }
+  .bagu-resize-handle::after {
+    content: "";
+    width: 2px;
+    height: 100%;
+    background: var(--border-color);
+    opacity: 0;
+    transition: opacity 0.2s ease, background 0.2s ease;
+  }
+  .bagu-resize-handle:hover::after,
+  .bagu-resize-handle:active::after {
+    opacity: 1;
+    background: var(--md-accent-fg-color);
+  }
+
+  .bagu-resize-left { grid-column: 2; grid-row: 1; }
+  .bagu-resize-right { grid-column: 4; grid-row: 1; }
+
+  /* 侧边栏折叠按钮优化 */
+  .bagu-sidebar-toggle {
+    position: absolute;
+    top: 0;
+    z-index: 2;
+    width: 1.8rem;
+    height: 1.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-panel);
+    color: var(--text-muted);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
+  }
+  .bagu-sidebar-toggle:hover {
+    color: var(--md-accent-fg-color);
+    border-color: var(--border-hover);
+  }
+
+  .bagu-toggle-left { right: 0.5rem; }
+  .bagu-toggle-right { left: 0.5rem; }
+
+  /* 折叠状态处理 */
+  body.bagu-left-collapsed { --bagu-left-width: 3.5rem; }
+  body.bagu-right-collapsed { --bagu-right-width: 3.5rem; }
+
+  body.bagu-left-collapsed .md-sidebar--primary .md-sidebar__scrollwrap,
+  body.bagu-right-collapsed .md-sidebar--secondary .md-sidebar__scrollwrap,
+  body.bagu-right-collapsed .md-sidebar--secondary .md-nav--secondary {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s;
+  }
+
+  body.bagu-left-collapsed .bagu-resize-left,
+  body.bagu-right-collapsed .bagu-resize-right {
+    pointer-events: none;
+  }
+}
+
+/* =========================================
+   2. 内容容器与侧栏卡片化
+========================================= */
 .md-content__inner {
-  background: var(--bg-main) !important;
-  box-shadow: var(--shadow-sm);
+  background: var(--bg-panel);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 1.5rem 2.5rem !important; /* 增加内边距提升呼吸感 */
-  margin-top: 0.5rem;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  padding: 2.5rem 3.5rem !important; /* 更宽裕的学术排版留白 */
   margin-bottom: 2rem;
 }
 
-/* 侧边栏滚动条美化 */
-.md-sidebar__scrollwrap::-webkit-scrollbar {
-  width: 4px;
-}
-.md-sidebar__scrollwrap::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 10px;
-}
-.md-sidebar__scrollwrap:hover::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
-}
+body.bagu-home-hero .md-content__inner > h1:first-of-type,
+body.bagu-home-hero .md-content__inner > .md-content__button { display: none; }
+body.bagu-home-hero .md-content__inner { padding-top: 0 !important; background: transparent; border: none; box-shadow: none; }
 
-/* 侧边栏：取消阴影，改用简洁边框 */
 .md-sidebar__scrollwrap {
   background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0.9rem 0.5rem;
+  padding: 0 0.5rem;
 }
 
-/* 排版：提升标题质感 */
+/* 侧边栏导航项美化 */
+.md-sidebar .md-nav__title {
+  font-weight: 700;
+  color: var(--text-main);
+  padding: 0.5rem;
+}
+
+.md-sidebar .md-nav__link {
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.md-sidebar .md-nav__link:hover {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-main);
+}
+
+.md-sidebar .md-nav__link--active {
+  color: var(--md-accent-fg-color) !important;
+  background: rgba(15, 118, 110, 0.05); /* 极淡的主题色背景 */
+  font-weight: 600;
+}
+
+/* 隐藏烦人的滚动条，保持整洁 */
+.md-sidebar__scrollwrap::-webkit-scrollbar { width: 0px; }
+
+/* =========================================
+   3. 排版体系 (Typography) 特化阅读体验
+========================================= */
+.md-typeset {
+  font-size: 0.92rem;
+  line-height: 1.75; /* 增大行高 */
+  color: var(--text-main);
+}
+
+.md-typeset h1, .md-typeset h2 {
+  font-family: "Noto Serif SC", "Source Han Serif SC", serif;
+  color: var(--md-primary-fg-color);
+  letter-spacing: 0.02em;
+}
+
 .md-typeset h1 {
-  font-family: "Noto Serif SC", serif;
-  background: linear-gradient(to right, var(--md-primary-fg-color), var(--md-accent-fg-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent; /* 标题渐变效果 */
-  font-weight: 800;
-  margin-bottom: 1.8rem;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-color);
 }
 
 .md-typeset h2 {
-  background: linear-gradient(135deg, var(--bg-panel) 0%, #ffffff 100%);
-  transition: transform 0.2s ease;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color); /* 替换掉原先花哨的背景 */
 }
 
-.md-typeset h2:hover {
-  transform: translateX(4px); /* 悬停微动交互 */
+/* H3 作为知识点锚点 */
+.md-typeset h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+}
+.md-typeset h3::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 1em;
+  background: var(--md-accent-fg-color);
+  margin-right: 0.5rem;
+  border-radius: 2px;
 }
 
-/* 代码块：圆角与内阴影 */
+/* 代码与行内高亮 */
+.md-typeset code {
+  font-family: "JetBrains Mono", monospace;
+  background: rgba(15, 23, 42, 0.04);
+  color: #0f172a;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
 .md-typeset pre {
-  border-radius: 12px;
+  background: #1e1e1e !important; /* 代码块使用深色，增强对比 */
+  border-radius: 8px;
   border: 1px solid var(--border-color);
-  background-color: #fcfdfe !important;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.1);
 }
-
-/* --- Hero Section 交互增强 --- */
-.hero-shell {
-  background: white;
-  box-shadow: var(--shadow-md);
+.md-typeset pre > code {
+  background: transparent;
+  color: #d4d4d4;
   border: none;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.hero-shell:hover {
-  box-shadow: var(--shadow-lg);
+/* =========================================
+   4. 面试八股特化：问答字卡 (Admonition)
+========================================= */
+.md-typeset .admonition {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--md-accent-fg-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  padding: 1rem 1.2rem;
+  margin: 1.5rem 0;
+}
+.md-typeset .admonition-title {
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid var(--border-color);
+  margin: -1rem -1.2rem 1rem -1.2rem;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
 }
 
-.stat-card {
-  transition: all 0.3s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-5px); /* 悬浮位移 */
+/* =========================================
+   5. 首页 (Hero Section) 重构
+========================================= */
+.hero-shell {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 2rem;
+  background: var(--bg-panel);
+  padding: 3rem;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
   box-shadow: var(--shadow-md);
+  margin-bottom: 3rem;
 }
 
-.note-card {
-  border: 1px solid transparent;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.hero-kicker {
+  color: var(--md-accent-fg-color);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
 }
 
-.note-card:hover {
-  border-color: var(--md-accent-fg-color);
-  transform: scale(1.02); /* 轻微放大感 */
+.hero-copy h1 { border-bottom: none; padding-bottom: 0; margin-bottom: 1rem; }
+.hero-lead { color: var(--text-muted); font-size: 1.05rem; }
+
+.hero-btn {
+  padding: 0.6rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+  color: var(--text-main) !important;
+  transition: all 0.2s;
+}
+.hero-btn.primary {
+  background: var(--md-accent-fg-color);
+  color: white !important;
+  border: none;
+}
+.hero-btn.primary:hover { background: #0d5f59; box-shadow: 0 4px 10px rgba(15,118,110,0.3); }
+.hero-btn:not(.primary):hover { background: var(--bg-subtle); }
+
+.stat-card, .note-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.2rem;
+  transition: all 0.2s ease;
+}
+.stat-card:hover, .note-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-hover);
 }
 
-/* 针对 MkDocs 搜索框的细微美化 */
-.md-search__form {
-  transition: background-color 0.25s;
-}
-.md-search__form:hover {
-  background-color: var(--bg-panel-strong) !important;
+.note-tag {
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--md-accent-fg-color);
+  border: none;
+  font-weight: 600;
 }
 
-/* 适配移动端：取消卡片边距 */
 @media screen and (max-width: 60em) {
-  .md-content__inner {
-    border: none;
-    border-radius: 0;
-    padding: 1rem !important;
-    box-shadow: none;
-  }
+  .md-content__inner { padding: 1.5rem !important; border-radius: 0; border-left: none; border-right: none; }
+  .hero-shell { grid-template-columns: 1fr; padding: 2rem; }
 }
