@@ -1,49 +1,19 @@
 (function () {
   const STORAGE = {
-    leftWidth: "bagu_mkdocs_left_width",
-    rightWidth: "bagu_mkdocs_right_width",
-    leftCollapsed: "bagu_mkdocs_left_collapsed",
-    rightCollapsed: "bagu_mkdocs_right_collapsed",
+    leftWidth: "bagu_mkdocs_left_width", rightWidth: "bagu_mkdocs_right_width",
+    leftCollapsed: "bagu_mkdocs_left_collapsed", rightCollapsed: "bagu_mkdocs_right_collapsed",
     tocCollapsed: "bagu_mkdocs_toc_collapsed"
   };
+  const DEFAULTS = { leftWidth: 248, rightWidth: 272 };
 
-  const DEFAULTS = {
-    leftWidth: 248,
-    rightWidth: 272
-  };
+  function clamp(value, min, max) { return Math.min(Math.max(value, min), max); }
+  function getDesktop() { return window.matchMedia("(min-width: 992px)").matches; }
+  function getBounds(side) { return side === "left" ? { min: 200, max: Math.min(360, Math.floor(window.innerWidth * 0.28)) } : { min: 220, max: Math.min(380, Math.floor(window.innerWidth * 0.3)) }; }
+  function getPageKey() { return location.pathname; }
+  function loadJSON(key, fallback) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch { return fallback; } }
+  function saveJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 
-  function clamp(value, min, max) {
-    return Math.min(Math.max(value, min), max);
-  }
-
-  function getDesktop() {
-    return window.matchMedia("(min-width: 992px)").matches;
-  }
-
-  function getBounds(side) {
-    if (side === "left") {
-      return { min: 200, max: Math.min(360, Math.floor(window.innerWidth * 0.28)) };
-    }
-    return { min: 220, max: Math.min(380, Math.floor(window.innerWidth * 0.3)) };
-  }
-
-  function getPageKey() {
-    return location.pathname;
-  }
-
-  function loadJSON(key, fallback) {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : fallback;
-    } catch {
-      return fallback;
-    }
-  }
-
-  function saveJSON(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-  }
-
+  // [原有逻辑] 侧边栏宽度与折叠状态应用
   function applyLayoutState(root) {
     const state = root.__baguState;
     if (!state) return;
@@ -52,77 +22,32 @@
     document.documentElement.style.setProperty("--bagu-left-width", `${state.leftWidth}px`);
     document.documentElement.style.setProperty("--bagu-right-width", `${state.rightWidth}px`);
 
-    if (state.leftToggle) {
-      state.leftToggle.innerHTML = state.leftCollapsed ? "&#9654;" : "&#9664;";
-      state.leftToggle.setAttribute("aria-label", state.leftCollapsed ? "Expand left sidebar" : "Collapse left sidebar");
-    }
-    if (state.rightToggle) {
-      state.rightToggle.innerHTML = state.rightCollapsed ? "&#9664;" : "&#9654;";
-      state.rightToggle.setAttribute("aria-label", state.rightCollapsed ? "Expand right sidebar" : "Collapse right sidebar");
-    }
+    if (state.leftToggle) { state.leftToggle.innerHTML = state.leftCollapsed ? `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>` : `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>`; }
+    if (state.rightToggle) { state.rightToggle.innerHTML = state.rightCollapsed ? `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>` : `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>`; }
   }
 
+  // [原有逻辑] 侧边栏拖拽
   function beginResize(root, side, startEvent) {
     if (!getDesktop()) return;
     const state = root.__baguState;
     if ((side === "left" && state.leftCollapsed) || (side === "right" && state.rightCollapsed)) return;
-
-    const startX = startEvent.clientX;
-    const startWidth = side === "left" ? state.leftWidth : state.rightWidth;
-    const bounds = getBounds(side);
-
+    const startX = startEvent.clientX; const startWidth = side === "left" ? state.leftWidth : state.rightWidth; const bounds = getBounds(side);
     function onMove(event) {
       const delta = event.clientX - startX;
-      if (side === "left") {
-        state.leftWidth = clamp(startWidth + delta, bounds.min, bounds.max);
-        localStorage.setItem(STORAGE.leftWidth, String(state.leftWidth));
-      } else {
-        state.rightWidth = clamp(startWidth - delta, bounds.min, bounds.max);
-        localStorage.setItem(STORAGE.rightWidth, String(state.rightWidth));
-      }
+      if (side === "left") { state.leftWidth = clamp(startWidth + delta, bounds.min, bounds.max); localStorage.setItem(STORAGE.leftWidth, String(state.leftWidth)); } 
+      else { state.rightWidth = clamp(startWidth - delta, bounds.min, bounds.max); localStorage.setItem(STORAGE.rightWidth, String(state.rightWidth)); }
       applyLayoutState(root);
     }
-
-    function onUp() {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      document.body.style.userSelect = "";
-      document.body.style.cursor = "";
-    }
-
-    document.body.style.userSelect = "none";
-    document.body.style.cursor = "col-resize";
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
+    function onUp() { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); document.body.style.userSelect = ""; document.body.style.cursor = ""; }
+    document.body.style.userSelect = "none"; document.body.style.cursor = "col-resize";
+    window.addEventListener("pointermove", onMove); window.addEventListener("pointerup", onUp);
   }
 
-  function teardownLayoutControls(root) {
-    const inner = root.querySelector(".md-main__inner");
-    if (inner) {
-      inner.querySelectorAll(".bagu-resize-handle").forEach((node) => node.remove());
-      delete inner.dataset.baguLayoutReady;
-    }
-
-    root.querySelectorAll(".bagu-sidebar-toggle").forEach((node) => node.remove());
-    document.body.classList.remove("bagu-left-collapsed", "bagu-right-collapsed");
-    document.documentElement.style.removeProperty("--bagu-left-width");
-    document.documentElement.style.removeProperty("--bagu-right-width");
-    delete root.__baguState;
-  }
-
+  // [原有逻辑] 构建侧边栏控件
   function ensureLayoutControls(root) {
-    if (!getDesktop()) {
-      teardownLayoutControls(root);
-      return;
-    }
-
-    const inner = root.querySelector(".md-main__inner");
-    const primary = root.querySelector(".md-sidebar--primary");
-    const content = root.querySelector(".md-content");
-    const secondary = root.querySelector(".md-sidebar--secondary");
-
-    if (!inner || !primary || !content || !secondary) return;
-    if (inner.dataset.baguLayoutReady === "1") return;
+    if (!getDesktop()) return;
+    const inner = root.querySelector(".md-main__inner"); const primary = root.querySelector(".md-sidebar--primary"); const secondary = root.querySelector(".md-sidebar--secondary");
+    if (!inner || !primary || !secondary || inner.dataset.baguLayoutReady === "1") return;
 
     const state = {
       leftWidth: clamp(Number(localStorage.getItem(STORAGE.leftWidth)) || DEFAULTS.leftWidth, getBounds("left").min, getBounds("left").max),
@@ -131,236 +56,182 @@
       rightCollapsed: localStorage.getItem(STORAGE.rightCollapsed) === "1"
     };
 
-    const leftHandle = document.createElement("div");
-    leftHandle.className = "bagu-resize-handle bagu-resize-left";
-    leftHandle.setAttribute("role", "separator");
-    leftHandle.setAttribute("aria-label", "Resize left sidebar");
-    leftHandle.addEventListener("pointerdown", (event) => beginResize(root, "left", event));
+    const leftHandle = document.createElement("div"); leftHandle.className = "bagu-resize-handle bagu-resize-left";
+    leftHandle.addEventListener("pointerdown", (e) => beginResize(root, "left", e));
+    const rightHandle = document.createElement("div"); rightHandle.className = "bagu-resize-handle bagu-resize-right";
+    rightHandle.addEventListener("pointerdown", (e) => beginResize(root, "right", e));
 
-    const rightHandle = document.createElement("div");
-    rightHandle.className = "bagu-resize-handle bagu-resize-right";
-    rightHandle.setAttribute("role", "separator");
-    rightHandle.setAttribute("aria-label", "Resize right sidebar");
-    rightHandle.addEventListener("pointerdown", (event) => beginResize(root, "right", event));
+    inner.insertBefore(leftHandle, root.querySelector(".md-content")); inner.insertBefore(rightHandle, secondary);
 
-    inner.insertBefore(leftHandle, content);
-    inner.insertBefore(rightHandle, secondary);
-
-    const leftToggle = document.createElement("button");
-    leftToggle.className = "bagu-sidebar-toggle bagu-toggle-left";
-    leftToggle.type = "button";
-    leftToggle.addEventListener("click", () => {
-      state.leftCollapsed = !state.leftCollapsed;
-      localStorage.setItem(STORAGE.leftCollapsed, state.leftCollapsed ? "1" : "0");
-      applyLayoutState(root);
-    });
+    const leftToggle = document.createElement("button"); leftToggle.className = "bagu-sidebar-toggle bagu-toggle-left";
+    leftToggle.addEventListener("click", () => { state.leftCollapsed = !state.leftCollapsed; localStorage.setItem(STORAGE.leftCollapsed, state.leftCollapsed ? "1" : "0"); applyLayoutState(root); });
     primary.appendChild(leftToggle);
 
-    const rightToggle = document.createElement("button");
-    rightToggle.className = "bagu-sidebar-toggle bagu-toggle-right";
-    rightToggle.type = "button";
-    rightToggle.addEventListener("click", () => {
-      state.rightCollapsed = !state.rightCollapsed;
-      localStorage.setItem(STORAGE.rightCollapsed, state.rightCollapsed ? "1" : "0");
-      applyLayoutState(root);
-    });
+    const rightToggle = document.createElement("button"); rightToggle.className = "bagu-sidebar-toggle bagu-toggle-right";
+    rightToggle.addEventListener("click", () => { state.rightCollapsed = !state.rightCollapsed; localStorage.setItem(STORAGE.rightCollapsed, state.rightCollapsed ? "1" : "0"); applyLayoutState(root); });
     secondary.appendChild(rightToggle);
 
-    state.leftToggle = leftToggle;
-    state.rightToggle = rightToggle;
-    root.__baguState = state;
-    inner.dataset.baguLayoutReady = "1";
-    applyLayoutState(root);
+    state.leftToggle = leftToggle; state.rightToggle = rightToggle; root.__baguState = state;
+    inner.dataset.baguLayoutReady = "1"; applyLayoutState(root);
   }
 
-  function expandTocAncestors(item) {
-    let current = item;
-    const collapsedState = loadJSON(STORAGE.tocCollapsed, {});
-    const pageKey = getPageKey();
-    collapsedState[pageKey] = collapsedState[pageKey] || {};
-
-    while (current) {
-      const parent = current.parentElement?.closest(".bagu-toc-item");
-      if (!parent) break;
-      parent.classList.remove("bagu-collapsed");
-      const key = parent.dataset.tocId;
-      if (key) collapsedState[pageKey][key] = false;
-      current = parent;
-    }
-    saveJSON(STORAGE.tocCollapsed, collapsedState);
-  }
-
-  function getHeadingText(heading) {
-    const clone = heading.cloneNode(true);
-    clone.querySelectorAll(".headerlink").forEach((node) => node.remove());
-    return clone.textContent.trim();
-  }
-
-  function collectFallbackHeadings(root) {
-    const content = root.querySelector(".md-content__inner");
-    if (!content) return [];
-
-    return [...content.querySelectorAll("h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]")]
-      .map((heading) => ({
-        level: Number(heading.tagName.slice(1)),
-        id: heading.id,
-        text: getHeadingText(heading),
-        isFirstTitle: heading.matches(".md-content__inner > h1:first-of-type")
-      }))
-      .filter((item) => item.id && item.text && !item.isFirstTitle && item.text !== "目录");
-  }
-
-  function buildHeadingTree(headings) {
-    const root = { level: 0, children: [] };
-    const stack = [root];
-
-    headings.forEach((heading) => {
-      const node = { ...heading, children: [] };
-      while (stack.length > 1 && heading.level <= stack[stack.length - 1].level) {
-        stack.pop();
-      }
-      stack[stack.length - 1].children.push(node);
-      stack.push(node);
-    });
-
-    return root.children;
-  }
-
-  function renderHeadingTree(nodes) {
-    const list = document.createElement("ul");
-    list.className = "md-nav__list";
-
-    nodes.forEach((node) => {
-      const item = document.createElement("li");
-      item.className = "md-nav__item";
-
-      const link = document.createElement("a");
-      link.className = "md-nav__link";
-      link.href = `#${node.id}`;
-      link.textContent = node.text;
-      item.appendChild(link);
-
-      if (node.children.length) {
-        const nav = document.createElement("nav");
-        nav.className = "md-nav";
-        nav.appendChild(renderHeadingTree(node.children));
-        item.appendChild(nav);
-      }
-
-      list.appendChild(item);
-    });
-
-    return list;
-  }
-
-  function ensureFallbackToc(root) {
-    const secondary = root.querySelector(".md-sidebar--secondary");
-    if (!secondary) return;
-
-    const nav = secondary.querySelector(".md-nav--secondary");
-    if (!nav || nav.querySelector(".md-nav__link")) return;
-
-    const headings = collectFallbackHeadings(root);
-    if (!headings.length) return;
-
-    const title = document.createElement("label");
-    title.className = "md-nav__title";
-    title.textContent = "目录";
-
-    nav.replaceChildren(title, renderHeadingTree(buildHeadingTree(headings)));
-  }
-
+  // [原有逻辑] TOC 树构建
   function buildTocTree(root) {
-    const secondary = root.querySelector(".md-sidebar--secondary");
-    if (!secondary) return;
-    const nav = secondary.querySelector(".md-nav--secondary");
+    const nav = root.querySelector(".md-sidebar--secondary .md-nav--secondary");
     if (!nav || nav.dataset.baguTocReady === "1") return;
-
-    const collapsedState = loadJSON(STORAGE.tocCollapsed, {});
-    const pageKey = getPageKey();
-    collapsedState[pageKey] = collapsedState[pageKey] || {};
+    const collapsedState = loadJSON(STORAGE.tocCollapsed, {}); const pageKey = getPageKey(); collapsedState[pageKey] = collapsedState[pageKey] || {};
 
     nav.querySelectorAll(".md-nav__item").forEach((item, index) => {
-      const childNav = item.querySelector(":scope > nav.md-nav");
-      const link = item.querySelector(":scope > .md-nav__link");
+      const childNav = item.querySelector(":scope > nav.md-nav"); const link = item.querySelector(":scope > .md-nav__link");
       if (!link) return;
-      item.classList.add("bagu-toc-item");
-      const tocId = link.getAttribute("href") || `toc-${index}`;
-      item.dataset.tocId = tocId;
+      item.classList.add("bagu-toc-item"); const tocId = link.getAttribute("href") || `toc-${index}`; item.dataset.tocId = tocId;
 
-      const row = document.createElement("div");
-      row.className = "bagu-toc-row";
-
+      const row = document.createElement("div"); row.className = "bagu-toc-row";
       if (childNav) {
-        const toggle = document.createElement("button");
-        toggle.className = "bagu-toc-toggle";
-        toggle.type = "button";
-        toggle.innerHTML = collapsedState[pageKey][tocId] ? "&#9656;" : "&#9662;";
-        toggle.setAttribute("aria-label", collapsedState[pageKey][tocId] ? "Expand section" : "Collapse section");
-        toggle.addEventListener("click", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          const next = !item.classList.contains("bagu-collapsed");
-          item.classList.toggle("bagu-collapsed", next);
-          collapsedState[pageKey][tocId] = next;
-          toggle.innerHTML = next ? "&#9656;" : "&#9662;";
-          toggle.setAttribute("aria-label", next ? "Expand section" : "Collapse section");
-          saveJSON(STORAGE.tocCollapsed, collapsedState);
+        const toggle = document.createElement("button"); toggle.className = "bagu-toc-toggle";
+        toggle.innerHTML = collapsedState[pageKey][tocId] ? "▶" : "▼";
+        toggle.addEventListener("click", (e) => {
+          e.preventDefault(); e.stopPropagation(); const next = !item.classList.contains("bagu-collapsed");
+          item.classList.toggle("bagu-collapsed", next); collapsedState[pageKey][tocId] = next;
+          toggle.innerHTML = next ? "▶" : "▼"; saveJSON(STORAGE.tocCollapsed, collapsedState);
         });
         row.appendChild(toggle);
       } else {
-        const spacer = document.createElement("span");
-        spacer.className = "bagu-toc-spacer";
-        spacer.innerHTML = "&nbsp;";
-        row.appendChild(spacer);
+        const spacer = document.createElement("span"); spacer.className = "bagu-toc-spacer"; row.appendChild(spacer);
       }
-
-      link.parentNode.insertBefore(row, link);
-      row.appendChild(link);
-
-      if (childNav && collapsedState[pageKey][tocId]) {
-        item.classList.add("bagu-collapsed");
-      }
-
-      if (link.classList.contains("md-nav__link--active")) {
-        expandTocAncestors(item);
-      }
+      link.parentNode.insertBefore(row, link); row.appendChild(link);
+      if (childNav && collapsedState[pageKey][tocId]) item.classList.add("bagu-collapsed");
     });
-
     nav.dataset.baguTocReady = "1";
   }
 
-  function syncActiveToc(root) {
-    const activeLink = root.querySelector(".md-sidebar--secondary .md-nav--secondary .md-nav__link--active");
-    const activeItem = activeLink?.closest(".bagu-toc-item");
-    if (activeItem) {
-      expandTocAncestors(activeItem);
+  // =========================================
+  // [全新逻辑] 核心功能：自动打包字卡 & 控制台
+  // =========================================
+  function initEducationFeatures(root) {
+    const contentInner = root.querySelector('.md-content__inner');
+    if (!contentInner || contentInner.dataset.eduReady === "1" || document.body.classList.contains("bagu-home-hero")) return;
+
+    // 1. 注入控制台 (包含阅读进度和折叠开关)
+    const h1 = contentInner.querySelector('h1');
+    const toolbar = document.createElement('div');
+    toolbar.className = 'bagu-toolbar';
+    toolbar.innerHTML = `
+      <div class="bagu-progress-container"><div class="bagu-progress-bar" id="bagu-progress"></div></div>
+      <div class="bagu-toolbar-actions">
+        <button id="toggle-cards-btn" class="bagu-tool-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 8h16M4 16h16"/></svg>
+          折叠所有答案
+        </button>
+      </div>
+    `;
+    // 将工具栏插在 H1 下方
+    if (h1) { h1.parentNode.insertBefore(toolbar, h1.nextSibling); } 
+    else { contentInner.insertBefore(toolbar, contentInner.firstChild); }
+
+    // 2. 自动 H3 字卡化 (Auto-Flashcards)
+    const elements = Array.from(contentInner.children);
+    let currentCard = null;
+    let currentContent = null;
+    let cardCount = 0;
+
+    elements.forEach(el => {
+      // 遇到更高级别的标题、或者本身就是控制台，停止当前打包
+      if (el.tagName === 'H1' || el.tagName === 'H2' || el.classList.contains('bagu-toolbar')) {
+        currentCard = null;
+      } else if (el.tagName === 'H3') {
+        // 创建新字卡 <details>
+        currentCard = document.createElement('details');
+        currentCard.className = 'bagu-flashcard';
+        currentCard.open = true; // 默认展开
+
+        const summary = document.createElement('summary');
+        summary.className = 'bagu-flashcard-title';
+        
+        const titleWrapper = document.createElement('div');
+        titleWrapper.className = 'bagu-flashcard-title-text';
+        
+        // 复制原始 H3 放入 summary，保留样式
+        const cloneH3 = el.cloneNode(true);
+        titleWrapper.appendChild(cloneH3);
+        summary.appendChild(titleWrapper);
+
+        // 创建内容区
+        currentContent = document.createElement('div');
+        currentContent.className = 'bagu-flashcard-content';
+
+        currentCard.appendChild(summary);
+        currentCard.appendChild(currentContent);
+
+        // 插入 DOM：替换原 H3 的位置
+        el.parentNode.insertBefore(currentCard, el);
+        
+        // 保留原 H3 作为一个隐藏锚点，防止右侧目录的 Hash 跳转失效
+        el.className = 'bagu-h3-anchor';
+        
+        cardCount++;
+      } else if (currentCard) {
+        // 将 H3 之后的内容移动到字卡内容区中
+        currentContent.appendChild(el);
+      }
+    });
+
+    // 3. 绑定全局控制逻辑
+    const toggleBtn = document.getElementById('toggle-cards-btn');
+    const allCards = document.querySelectorAll('.bagu-flashcard');
+    let isAllOpen = true;
+
+    if (cardCount === 0) {
+      toggleBtn.style.display = 'none'; // 如果没有H3，隐藏按钮
     }
+
+    toggleBtn.addEventListener('click', () => {
+      isAllOpen = !isAllOpen;
+      allCards.forEach(card => card.open = isAllOpen);
+      toggleBtn.innerHTML = isAllOpen 
+        ? `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 8h16M4 16h16"/></svg> 折叠所有答案` 
+        : `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="4 14 12 21 20 14"/><polyline points="4 3 12 10 20 3"/></svg> 展开所有答案`;
+    });
+
+    // 4. 阅读进度条同步
+    window.addEventListener('scroll', () => {
+      const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
+      const progressBar = document.getElementById('bagu-progress');
+      if (progressBar) progressBar.style.width = scrolled + '%';
+    });
+
+    // 5. 监听 Hash 跳转自动展开字卡
+    window.addEventListener('hashchange', () => {
+      if (location.hash) {
+        const targetId = location.hash.slice(1);
+        const anchor = document.getElementById(targetId);
+        if (anchor && anchor.classList.contains('bagu-h3-anchor')) {
+          const card = anchor.previousElementSibling;
+          if (card && card.classList.contains('bagu-flashcard')) card.open = true;
+        }
+      }
+    });
+
+    contentInner.dataset.eduReady = "1";
   }
 
   function init() {
     const root = document;
     document.body.classList.toggle("bagu-home-hero", !!root.querySelector(".hero-shell"));
     ensureLayoutControls(root);
-    ensureFallbackToc(root);
     buildTocTree(root);
-    syncActiveToc(root);
+    initEducationFeatures(root); // 启动教育增强功能
   }
 
   document.addEventListener("DOMContentLoaded", init);
-
-  if (typeof document$ !== "undefined" && document$.subscribe) {
-    document$.subscribe(() => {
-      window.setTimeout(init, 0);
-    });
-  }
-
+  if (typeof document$ !== "undefined" && document$.subscribe) { document$.subscribe(() => { window.setTimeout(init, 0); }); }
   window.addEventListener("resize", () => {
     ensureLayoutControls(document);
     if (!document.__baguState) return;
-    const state = document.__baguState;
-    state.leftWidth = clamp(state.leftWidth, getBounds("left").min, getBounds("left").max);
-    state.rightWidth = clamp(state.rightWidth, getBounds("right").min, getBounds("right").max);
+    document.__baguState.leftWidth = clamp(document.__baguState.leftWidth, getBounds("left").min, getBounds("left").max);
+    document.__baguState.rightWidth = clamp(document.__baguState.rightWidth, getBounds("right").min, getBounds("right").max);
     applyLayoutState(document);
   });
 })();
