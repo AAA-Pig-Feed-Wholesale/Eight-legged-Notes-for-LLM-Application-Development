@@ -3,6 +3,7 @@ site_description: 面试八股与大模型应用开发笔记
 site_url: https://AAA-Pig-Feed-Wholesale.github.io/Eight-legged-Notes-for-LLM-Application-Development/
 repo_url: https://github.com/AAA-Pig-Feed-Wholesale/Eight-legged-Notes-for-LLM-Application-Development
 repo_name: AAA-Pig-Feed-Wholesale/Eight-legged-Notes-for-LLM-Application-Development
+edit_uri: edit/main/content/
 
 docs_dir: docs
 site_dir: site

@@ -6,6 +6,7 @@ import shutil
 
 ROOT = Path(__file__).resolve().parent
 DOCS = ROOT / "docs"
+CONTENT = ROOT / "content"
 SKIP = {"README.md"}
 
 
@@ -15,7 +16,7 @@ def main() -> int:
     for path in DOCS.glob("*.md"):
         path.unlink()
 
-    for source in ROOT.glob("*.md"):
+    for source in CONTENT.glob("*.md"):
         if source.name in SKIP:
             continue
         shutil.copy2(source, DOCS / source.name)

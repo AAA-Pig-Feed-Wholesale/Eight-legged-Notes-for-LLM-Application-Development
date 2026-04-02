@@ -14,6 +14,7 @@ import markdown as markdown_lib
 
 
 ROOT_DIR = Path(__file__).resolve().parent
+CONTENT_DIR = ROOT_DIR / "content"
 POLL_INTERVAL_MS = 2000
 
 
@@ -1192,7 +1193,7 @@ HTML_PAGE = """<!doctype html>
 
 def list_markdown_files() -> list[dict[str, object]]:
     files = []
-    for path in ROOT_DIR.glob("*.md"):
+    for path in CONTENT_DIR.glob("*.md"):
         stat = path.stat()
         files.append(
             {
@@ -1206,8 +1207,8 @@ def list_markdown_files() -> list[dict[str, object]]:
 
 
 def resolve_markdown_file(name: str) -> Path:
-    candidate = (ROOT_DIR / name).resolve()
-    if candidate.parent != ROOT_DIR or candidate.suffix.lower() != ".md" or not candidate.is_file():
+    candidate = (CONTENT_DIR / name).resolve()
+    if candidate.parent != CONTENT_DIR or candidate.suffix.lower() != ".md" or not candidate.is_file():
         raise FileNotFoundError(name)
     return candidate
 
@@ -1310,7 +1311,7 @@ def main() -> int:
     server = ThreadingHTTPServer((args.host, args.port), DocsHandler)
     url = f"http://{args.host}:{args.port}"
 
-    print(f"Serving Markdown docs from: {ROOT_DIR}")
+    print(f"Serving Markdown docs from: {CONTENT_DIR}")
     print(f"Open: {url}")
     print("Auto-refresh checks for file updates every 2 seconds.")
 
