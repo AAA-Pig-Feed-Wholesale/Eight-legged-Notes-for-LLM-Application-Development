@@ -33,6 +33,34 @@
     return Math.min(Math.max(value, min), max);
   }
 
+  function debounce(fn, wait = 120) {
+    let timer = 0;
+    return (...args) => {
+      if (timer) {
+        window.clearTimeout(timer);
+      }
+      timer = window.setTimeout(() => {
+        timer = 0;
+        fn(...args);
+      }, wait);
+    };
+  }
+
+  function safeGetItem(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  function safeSetItem(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+    }
+  }
+
   function getDesktop() {
     return window.matchMedia("(min-width: 992px)").matches;
   }
@@ -198,9 +226,11 @@
         search.placeholder = "搜索文件名";
         header.insertAdjacentElement("afterend", search);
 
-        search.addEventListener("input", () => {
+        search.setAttribute("aria-label", "Search navigation");
+        const onSearch = debounce(() => {
           filterPrimaryNav(root, search.value);
-        });
+        }, 120);
+        search.addEventListener("input", onSearch);
       }
     } else {
       const nav = sidebar.querySelector(".md-nav--secondary");
@@ -268,7 +298,7 @@
 
   function loadJSON(key, fallback) {
     try {
-      const raw = localStorage.getItem(key);
+      const raw = safeGetItem(key);
       return raw ? JSON.parse(raw) : fallback;
     } catch {
       return fallback;
@@ -276,19 +306,19 @@
   }
 
   function saveJSON(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
+    safeSetItem(key, JSON.stringify(value));
   }
 
   function loadFlag(key) {
-    return localStorage.getItem(key) === "1";
+    return safeGetItem(key) === "1";
   }
 
   function saveFlag(key, value) {
-    localStorage.setItem(key, value ? "1" : "0");
+    safeSetItem(key, value ? "1" : "0");
   }
 
   function loadFlagWithDefault(key, fallback) {
-    const raw = localStorage.getItem(key);
+    const raw = safeGetItem(key);
     if (raw === null) {
       return fallback;
     }
@@ -345,11 +375,48 @@
     button.setAttribute("title", label);
   }
 
+  function getFocusableElements(container) {
+    if (!container) {
+      return [];
+    }
+    const selector = [
+      "a[href]",
+      "button:not([disabled])",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      "[tabindex]:not([tabindex=\"-1\"])"
+    ].join(",");
+    return Array.from(container.querySelectorAll(selector))
+      .filter((element) => element.getClientRects().length > 0);
+  }
+
+  function trapFocus(container, event) {
+    if (event.key !== "Tab") {
+      return;
+    }
+    const focusable = getFocusableElements(container);
+    if (!focusable.length) {
+      event.preventDefault();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   function updateSidebarToggleButton(button, side, collapsed) {
     if (!button) {
       return;
     }
-
+    button.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    button.setAttribute("aria-pressed", collapsed ? "true" : "false");
     if (side === "left") {
       setIconButton(button, collapsed ? "chevronRight" : "chevronLeft", collapsed ? "展开左侧栏" : "收起左侧栏");
       return;
@@ -403,10 +470,10 @@
 
       if (side === "left") {
         state.leftWidth = nextWidth;
-        localStorage.setItem(STORAGE.leftWidth, String(nextWidth));
+        safeSetItem(STORAGE.leftWidth, String(nextWidth));
       } else {
         state.rightWidth = nextWidth;
-        localStorage.setItem(STORAGE.rightWidth, String(nextWidth));
+        safeSetItem(STORAGE.rightWidth, String(nextWidth));
       }
 
       applyLayoutState(root);
@@ -449,8 +516,8 @@
     document.body.classList.toggle("bagu-right-disabled", !right.enabled);
 
     const state = root.__baguLayoutState || {
-      leftWidth: clamp(Number(localStorage.getItem(STORAGE.leftWidth)) || DEFAULTS.leftWidth, getBounds("left").min, getBounds("left").max),
-      rightWidth: clamp(Number(localStorage.getItem(STORAGE.rightWidth)) || DEFAULTS.rightWidth, getBounds("right").min, getBounds("right").max),
+      leftWidth: clamp(Number(safeGetItem(STORAGE.leftWidth)) || DEFAULTS.leftWidth, getBounds("left").min, getBounds("left").max),
+      rightWidth: clamp(Number(safeGetItem(STORAGE.rightWidth)) || DEFAULTS.rightWidth, getBounds("right").min, getBounds("right").max),
       leftCollapsed: loadFlag(STORAGE.leftCollapsed),
       rightCollapsed: loadFlag(STORAGE.rightCollapsed)
     };
@@ -568,6 +635,7 @@
     const button = nav.querySelector(".bagu-toc-mode");
     if (button) {
       button.textContent = state.compact ? "展开全部目录" : "仅看当前章节";
+      button.setAttribute("aria-pressed", state.compact ? "true" : "false");
     }
   }
 
@@ -812,6 +880,12 @@
         </div>
       </div>
     `;
+    deckOverlay.setAttribute("aria-hidden", "true");
+    const deckDialog = deckOverlay.querySelector(".bagu-deck-dialog");
+    if (deckDialog) {
+      deckDialog.setAttribute("tabindex", "-1");
+      deckDialog.id = "bagu-deck-dialog";
+    }
     document.body.appendChild(deckOverlay);
 
     const ui = {
@@ -821,13 +895,16 @@
       mobileProgressBar: mobileDock.querySelector(".bagu-mobile-progress-bar"),
       mobileDeckButton: mobileDock.querySelector(".bagu-mobile-open-deck"),
       deckOverlay,
+      deckDialog,
       deckStage: deckOverlay.querySelector(".bagu-deck-stage"),
       deckCounter: deckOverlay.querySelector(".bagu-deck-counter"),
       deckClose: deckOverlay.querySelector(".bagu-deck-close"),
       deckAnswer: deckOverlay.querySelector(".bagu-deck-answer"),
       deckPrev: deckOverlay.querySelector(".bagu-deck-prev"),
       deckNext: deckOverlay.querySelector(".bagu-deck-next"),
-      deckState: null
+      deckState: null,
+      deckFocusHandler: null,
+      lastActiveElement: null
     };
 
     ui.mobileProgressToggle.addEventListener("click", () => toggleProgressCollapsed(root));
@@ -841,6 +918,8 @@
         closeDeck(root);
       }
     });
+    ui.mobileDeckButton.setAttribute("aria-haspopup", "dialog");
+    ui.mobileDeckButton.setAttribute("aria-controls", "bagu-deck-dialog");
 
     let touchStartX = 0;
     let touchStartY = 0;
@@ -874,6 +953,7 @@
 
     const allOpen = state.cards.every((card) => card.open);
     setButtonLabel(state.cardsToggleButton, allOpen ? "cardsClosed" : "cardsOpen", allOpen ? LABELS.collapseAllCards : LABELS.expandAllCards);
+    state.cardsToggleButton.setAttribute("aria-pressed", allOpen ? "true" : "false");
   }
 
   function setProgressControls(root, collapsed) {
@@ -888,6 +968,7 @@
 
     ui.mobileDock.classList.toggle("bagu-progress-collapsed", collapsed);
     setButtonLabel(ui.mobileProgressToggle, "progress", collapsed ? "显示进度" : "收起进度");
+    ui.mobileProgressToggle.setAttribute("aria-pressed", collapsed ? "true" : "false");
   }
 
   function setProgressCollapsed(root, collapsed) {
@@ -937,7 +1018,10 @@
     state.currentSection.textContent = currentSection;
 
     ui.mobileProgressBar.style.width = `${progress}%`;
-    ui.mobileProgressToggle.querySelector("span").textContent = `进度 ${progressText}`;
+    const progressLabel = ui.mobileProgressToggle.querySelector("span");
+    if (progressLabel) {
+      progressLabel.textContent = `\u8fdb\u5ea6 ${progressText}`;
+    }
     ui.mobileSection.textContent = currentSection;
 
     syncMobileDock(root);
@@ -1018,6 +1102,8 @@
 
     progressToggleButton.addEventListener("click", () => toggleProgressCollapsed(root));
     deckButton.addEventListener("click", () => openDeck(root));
+    deckButton.setAttribute("aria-haspopup", "dialog");
+    deckButton.setAttribute("aria-controls", "bagu-deck-dialog");
 
     const state = {
       contentInner,
@@ -1060,6 +1146,8 @@
 
     ui.deckCounter.textContent = `${index + 1} / ${state.deckCards.length}`;
     setButtonLabel(ui.deckAnswer, "cardsOpen", isAnswerVisible ? LABELS.hideAnswer : LABELS.showAnswer);
+    ui.deckAnswer.setAttribute("aria-pressed", isAnswerVisible ? "true" : "false");
+    ui.deckAnswer.setAttribute("aria-controls", "bagu-deck-answer");
     ui.deckPrev.disabled = index === 0;
     ui.deckNext.disabled = index === state.deckCards.length - 1;
 
@@ -1067,7 +1155,7 @@
       <article class="bagu-deck-card">
         <div class="bagu-deck-card-kicker">Swipe Left / Right</div>
         <h3>${card.title}</h3>
-        <div class="bagu-deck-card-answer ${isAnswerVisible ? "is-visible" : ""}">
+        <div class="bagu-deck-card-answer ${isAnswerVisible ? "is-visible" : ""}" id="bagu-deck-answer">
           ${card.html}
         </div>
       </article>
@@ -1081,21 +1169,40 @@
     }
 
     const ui = ensureGlobalUi(root);
+    ui.lastActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     ui.deckState = {
       index: 0,
       openAnswers: new Set([0])
     };
 
     ui.deckOverlay.dataset.open = "1";
+    ui.deckOverlay.setAttribute("aria-hidden", "false");
     document.body.classList.add("bagu-deck-open");
     renderDeck(root);
+    if (ui.deckDialog) {
+      if (!ui.deckFocusHandler) {
+        ui.deckFocusHandler = (event) => trapFocus(ui.deckDialog, event);
+      }
+      ui.deckDialog.addEventListener("keydown", ui.deckFocusHandler);
+      window.setTimeout(() => {
+        ui.deckDialog.focus({ preventScroll: true });
+      }, 0);
+    }
   }
 
   function closeDeck(root) {
     const ui = ensureGlobalUi(root);
     ui.deckOverlay.dataset.open = "0";
+    ui.deckOverlay.setAttribute("aria-hidden", "true");
     ui.deckState = null;
     document.body.classList.remove("bagu-deck-open");
+    if (ui.deckDialog && ui.deckFocusHandler) {
+      ui.deckDialog.removeEventListener("keydown", ui.deckFocusHandler);
+    }
+    if (ui.lastActiveElement && typeof ui.lastActiveElement.focus === "function") {
+      ui.lastActiveElement.focus({ preventScroll: true });
+    }
+    ui.lastActiveElement = null;
   }
 
   function moveDeck(root, delta) {
@@ -1138,14 +1245,19 @@
 
     window.addEventListener("scroll", () => requestReadingUpdate(root), { passive: true });
     window.addEventListener("resize", () => {
-      ensureLayoutControls(root);
-      if (root.__baguLayoutState) {
-        root.__baguLayoutState.leftWidth = clamp(root.__baguLayoutState.leftWidth, getBounds("left").min, getBounds("left").max);
-        root.__baguLayoutState.rightWidth = clamp(root.__baguLayoutState.rightWidth, getBounds("right").min, getBounds("right").max);
-        applyLayoutState(root);
+      if (root.__baguResizeTimer) {
+        window.clearTimeout(root.__baguResizeTimer);
       }
-      syncMobileDock(root);
-      requestReadingUpdate(root);
+      root.__baguResizeTimer = window.setTimeout(() => {
+        ensureLayoutControls(root);
+        if (root.__baguLayoutState) {
+          root.__baguLayoutState.leftWidth = clamp(root.__baguLayoutState.leftWidth, getBounds("left").min, getBounds("left").max);
+          root.__baguLayoutState.rightWidth = clamp(root.__baguLayoutState.rightWidth, getBounds("right").min, getBounds("right").max);
+          applyLayoutState(root);
+        }
+        syncMobileDock(root);
+        requestReadingUpdate(root);
+      }, 120);
     });
 
     window.addEventListener("hashchange", () => {
@@ -1160,6 +1272,12 @@
         return;
       }
 
+      const target = event.target;
+      const isEditable = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable);
+      if (isEditable && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+        return;
+      }
+
       if (event.key === "Escape") {
         closeDeck(root);
       } else if (event.key === "ArrowLeft") {
@@ -1170,19 +1288,6 @@
     });
 
     root.__baguListenersBound = true;
-  }
-
-  function updateTocControlLabel(root) {
-    const state = root.__baguTocState;
-    const nav = root.querySelector(".md-sidebar--secondary .md-nav--secondary");
-    if (!state || !nav) {
-      return;
-    }
-
-    const button = nav.querySelector(".bagu-toc-mode");
-    if (button) {
-      button.textContent = state.compact ? "展开全部目录" : "仅看当前章节";
-    }
   }
 
   function getActiveTocId(root) {

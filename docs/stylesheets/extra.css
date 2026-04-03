@@ -975,3 +975,79 @@ body.bagu-deck-open { overflow: hidden; }
   .bagu-flashcard-title { padding: 0.9rem 1rem; }
   .bagu-flashcard-content { padding: 0.9rem 1rem 1rem 1rem; }
 }
+
+/* =========================================
+   UI polish (non-functional)
+========================================= */
+:root {
+  --content-max-width: 78ch;
+  --radius-card: 16px;
+  --radius-md: 12px;
+  --radius-sm: 10px;
+  --focus-ring-color: rgba(162, 74, 45, 0.35);
+}
+
+@media screen and (min-width: 62em) {
+  .md-content__inner {
+    max-width: var(--content-max-width);
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.md-typeset {
+  line-height: 1.75;
+}
+
+[data-md-color-scheme="default"] .md-typeset h2 {
+  background: var(--accent-soft);
+}
+
+[data-md-color-scheme="default"] .md-typeset code {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.bagu-flashcard,
+.stat-card,
+.note-card,
+.bagu-intro-card,
+.bagu-deck-card {
+  border-radius: var(--radius-card);
+}
+
+.bagu-tool-btn,
+.bagu-collapse-btn,
+.bagu-nav-search,
+.hero-btn,
+.bagu-mobile-chip,
+.bagu-deck-icon,
+.bagu-deck-nav-btn {
+  border-radius: var(--radius-md);
+}
+
+.bagu-tool-btn:focus-visible,
+.bagu-collapse-btn:focus-visible,
+.bagu-nav-search:focus-visible,
+.hero-btn:focus-visible,
+.bagu-mobile-chip:focus-visible,
+.bagu-deck-icon:focus-visible,
+.bagu-deck-nav-btn:focus-visible,
+.bagu-toc-toggle:focus-visible,
+.md-nav__link:focus-visible,
+.md-typeset a:focus-visible {
+  outline: 3px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bagu-flashcard,
+  .note-card,
+  .stat-card,
+  .hero-btn,
+  .bagu-tool-btn,
+  .bagu-deck-card,
+  .bagu-mobile-dock {
+    transition: none !important;
+    animation: none !important;
+  }
+}
