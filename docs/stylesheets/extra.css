@@ -273,6 +273,19 @@ body {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
   }
+
+  .md-sidebar--secondary {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .md-sidebar--secondary .md-sidebar__inner {
+    padding-right: 0 !important;
+  }
+
+  .md-sidebar--secondary .md-nav--secondary {
+    margin-right: 0;
+  }
 }
 .bagu-toc-controls {
   display: flex;
