@@ -139,6 +139,12 @@ body {
     margin-right: 0 !important;
   }
 
+  .md-container__inner {
+    max-width: none;
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+  }
+
   .md-main {
     margin-right: 0 !important;
     padding-right: 0 !important;
@@ -177,6 +183,12 @@ body {
     top: 4.8rem;
     height: calc(100vh - 5.6rem);
     padding-top: 1rem;
+  }
+
+  .md-sidebar--secondary {
+    position: sticky;
+    right: 0;
+    justify-self: end;
   }
 
   .md-sidebar--primary { grid-column: 1; }
