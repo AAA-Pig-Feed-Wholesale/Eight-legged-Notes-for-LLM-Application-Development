@@ -133,10 +133,31 @@ body {
 .md-main__inner { margin-top: 1.5rem; transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 
 @media screen and (min-width: 62em) {
+  .md-container {
+    max-width: none;
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .md-main {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .md-page {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .md-grid {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+  }
+
   .md-main__inner {
     max-width: none;
     margin-left: 1rem;
-    margin-right: 0;
+    margin-right: 0 !important;
     display: grid;
     grid-template-columns: minmax(0, var(--bagu-left-width)) var(--bagu-handle-width) minmax(0, 1fr) var(--bagu-handle-width) minmax(0, var(--bagu-right-width));
     gap: 0.5rem;
