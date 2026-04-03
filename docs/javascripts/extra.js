@@ -60,6 +60,11 @@
       return !!(nav && nav.querySelector(".md-nav__item"));
     }
 
+    const empty = nav.querySelector(".bagu-toc-empty");
+    if (empty) {
+      empty.remove();
+    }
+
     const contentInner = root.querySelector(".md-content__inner");
     if (!contentInner) {
       return false;
@@ -108,6 +113,7 @@
       const link = document.createElement("a");
       link.className = "md-nav__link";
       link.href = `#${heading.element.id}`;
+      link.classList.add(`bagu-toc-level-${heading.level}`);
 
       const label = document.createElement("span");
       label.className = "md-ellipsis";
@@ -150,11 +156,11 @@
     const secondary = root.querySelector(".md-sidebar--secondary");
 
     if (primary && root.__baguLayoutState?.leftToggle) {
-      setupSidebar(root, primary, "导航", root.__baguLayoutState.leftToggle, true);
+      setupSidebar(root, primary, "Files", root.__baguLayoutState.leftToggle, true);
     }
 
     if (secondary && root.__baguLayoutState?.rightToggle) {
-      setupSidebar(root, secondary, "目录", root.__baguLayoutState.rightToggle, false);
+      setupSidebar(root, secondary, "Outline", root.__baguLayoutState.rightToggle, false);
     }
   }
 
@@ -189,7 +195,7 @@
         search = document.createElement("input");
         search.className = "bagu-nav-search";
         search.type = "search";
-        search.placeholder = "搜索目录";
+        search.placeholder = "搜索文件名";
         header.insertAdjacentElement("afterend", search);
 
         search.addEventListener("input", () => {
@@ -1166,6 +1172,121 @@
     root.__baguListenersBound = true;
   }
 
+  function updateTocControlLabel(root) {
+    const state = root.__baguTocState;
+    const nav = root.querySelector(".md-sidebar--secondary .md-nav--secondary");
+    if (!state || !nav) {
+      return;
+    }
+
+    const button = nav.querySelector(".bagu-toc-mode");
+    if (button) {
+      button.textContent = state.compact ? "展开全部目录" : "仅看当前章节";
+    }
+  }
+
+  function getActiveTocId(root) {
+    return root.__baguTocState?.activeId || root.__baguEducationState?.currentHeadingId || (location.hash ? location.hash.slice(1) : "");
+  }
+
+  function setActiveToc(root, id) {
+    const nav = root.querySelector(".md-sidebar--secondary .md-nav--secondary");
+    if (!nav) {
+      return;
+    }
+
+    const links = Array.from(nav.querySelectorAll(".md-nav__link"));
+    links.forEach((link) => link.classList.remove("md-nav__link--active"));
+
+    const topItems = Array.from(nav.querySelectorAll(":scope > .md-nav__list > .bagu-toc-item"));
+    topItems.forEach((item) => item.classList.remove("bagu-toc-current"));
+
+    if (!id) {
+      return;
+    }
+
+    const link = nav.querySelector(`a.md-nav__link[href="#${escapeSelector(id)}"]`);
+    if (!link) {
+      return;
+    }
+
+    link.classList.add("md-nav__link--active");
+    const topItem = topItems.find((item) => item.contains(link));
+    if (topItem) {
+      topItem.classList.add("bagu-toc-current");
+    }
+
+    const collapsedState = loadJSON(STORAGE.tocCollapsed, {});
+    const pageKey = getPageKey();
+    collapsedState[pageKey] = collapsedState[pageKey] || {};
+
+    let current = link.closest(".bagu-toc-item");
+    while (current) {
+      if (current.classList.contains("bagu-collapsed")) {
+        current.classList.remove("bagu-collapsed");
+        const tocId = current.dataset.tocId;
+        if (tocId) {
+          collapsedState[pageKey][tocId] = false;
+        }
+        const toggle = current.querySelector(":scope > .bagu-toc-row .bagu-toc-toggle");
+        if (toggle) {
+          toggle.innerHTML = icon("chevronDown");
+        }
+      }
+      current = current.parentElement ? current.parentElement.closest(".bagu-toc-item") : null;
+    }
+
+    saveJSON(STORAGE.tocCollapsed, collapsedState);
+  }
+
+  function syncTocCurrent(root) {
+    const currentId = getActiveTocId(root);
+    setActiveToc(root, currentId);
+  }
+
+  function bindTocObserver(root) {
+    if (root.__baguTocObserver) {
+      root.__baguTocObserver.disconnect();
+      root.__baguTocObserver = null;
+    }
+
+    const contentInner = root.querySelector(".md-content__inner");
+    if (!contentInner) {
+      return;
+    }
+
+    const headings = Array.from(contentInner.querySelectorAll("h2[id], h3[id], h4[id], h5[id], h6[id]"));
+    if (!headings.length) {
+      const nav = root.querySelector(".md-sidebar--secondary .md-nav--secondary");
+      if (nav) {
+        nav.innerHTML = '<div class="bagu-toc-empty">当前文档没有二级目录</div>';
+      }
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length) {
+          const id = visible[0].target.id;
+          const state = root.__baguTocState || { compact: loadFlagWithDefault(STORAGE.tocCompact, true) };
+          state.activeId = id;
+          root.__baguTocState = state;
+          setActiveToc(root, id);
+        }
+      },
+      {
+        rootMargin: "-18% 0px -72% 0px",
+        threshold: [0, 1]
+      }
+    );
+
+    headings.forEach((heading) => observer.observe(heading));
+    root.__baguTocObserver = observer;
+  }
+
   function init() {
     const root = document;
     document.body.classList.toggle("bagu-home-hero", !!root.querySelector(".hero-shell"));
@@ -1175,6 +1296,7 @@
     ensureLayoutControls(root);
     ensureSidebarChrome(root);
     buildTocTree(root);
+    bindTocObserver(root);
     bindGlobalListeners(root);
     initEducationFeatures(root);
 
