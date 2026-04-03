@@ -980,19 +980,10 @@ body.bagu-deck-open { overflow: hidden; }
    UI polish (non-functional)
 ========================================= */
 :root {
-  --content-max-width: 78ch;
   --radius-card: 16px;
   --radius-md: 12px;
   --radius-sm: 10px;
   --focus-ring-color: rgba(162, 74, 45, 0.35);
-}
-
-@media screen and (min-width: 62em) {
-  .md-content__inner {
-    max-width: var(--content-max-width);
-    margin-left: auto;
-    margin-right: auto;
-  }
 }
 
 .md-typeset {
