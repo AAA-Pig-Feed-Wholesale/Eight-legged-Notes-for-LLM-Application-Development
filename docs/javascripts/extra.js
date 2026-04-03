@@ -6,8 +6,7 @@
     rightCollapsed: "bagu_mkdocs_right_collapsed",
     tocCollapsed: "bagu_mkdocs_toc_collapsed",
     progressCollapsed: "bagu_mkdocs_progress_collapsed",
-    tocCompact: "bagu_mkdocs_toc_compact",
-    navFocus: "bagu_mkdocs_nav_focus"
+    tocCompact: "bagu_mkdocs_toc_compact"
   };
 
   const DEFAULTS = {
@@ -238,46 +237,6 @@
         item = item.parentElement ? item.parentElement.closest(".md-nav__item") : null;
       }
     });
-  }
-
-  function applyNavFocus(root, enabled) {
-    document.body.classList.toggle("bagu-nav-focus", enabled);
-  }
-
-  function ensureNavFocusToggle(root) {
-    const primary = root.querySelector(".md-sidebar--primary");
-    if (!primary) {
-      return;
-    }
-
-    const inner = primary.querySelector(".md-sidebar__inner");
-    if (!inner || inner.querySelector(".bagu-nav-focus-toggle")) {
-      return;
-    }
-
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "bagu-nav-focus-toggle";
-
-    const state = root.__baguNavState || {
-      focusOnly: loadFlagWithDefault(STORAGE.navFocus, false)
-    };
-    root.__baguNavState = state;
-    applyNavFocus(root, state.focusOnly);
-
-    const updateLabel = () => {
-      button.textContent = state.focusOnly ? "展开全部导航" : "仅看当前章节";
-    };
-
-    updateLabel();
-    button.addEventListener("click", () => {
-      state.focusOnly = !state.focusOnly;
-      saveFlag(STORAGE.navFocus, state.focusOnly);
-      applyNavFocus(root, state.focusOnly);
-      updateLabel();
-    });
-
-    inner.insertBefore(button, inner.firstChild);
   }
 
   function suppressSearchInitMessage(root) {
@@ -729,12 +688,12 @@
         currentContent.className = "bagu-flashcard-content";
 
         currentCard.appendChild(summary);
-      currentCard.appendChild(currentContent);
+        currentCard.appendChild(currentContent);
 
-      element.parentNode.insertBefore(currentCard, element);
-      element.classList.add("bagu-h3-anchor");
-      return;
-    }
+        element.parentNode.insertBefore(currentCard, element);
+        element.classList.add("bagu-h3-anchor");
+        return;
+      }
 
       if (currentCard && currentContent) {
         currentContent.appendChild(element);
@@ -948,15 +907,6 @@
     ui.mobileDock.hidden = !shouldShow;
     document.body.classList.toggle("bagu-mobile-dock-active", shouldShow && getMobile());
     ui.mobileDeckButton.hidden = !shouldShow || !state.cards.length;
-  }
-
-  function resolveCurrentSection(headings) {
-    if (!headings.length) {
-      return LABELS.currentSectionFallback;
-    }
-
-    const current = resolveCurrentHeading(headings);
-    return current ? current.label : LABELS.currentSectionFallback;
   }
 
   function updateReadingState(root) {
