@@ -142,7 +142,7 @@
     }
 
     document.body.classList.toggle("bagu-left-collapsed", !!state.leftCollapsed);
-    document.body.classList.toggle("bagu-right-collapsed", !!state.rightCollapsed);
+    document.body.classList.toggle("bagu-right-collapsed", !!state.rightEnabled && !!state.rightCollapsed);
     document.documentElement.style.setProperty("--bagu-left-width", `${state.leftWidth}px`);
     document.documentElement.style.setProperty("--bagu-right-width", `${state.rightWidth}px`);
 
@@ -220,56 +220,87 @@
     const primary = root.querySelector(".md-sidebar--primary");
     const secondary = root.querySelector(".md-sidebar--secondary");
 
-    if (!inner || !primary || !secondary || inner.dataset.baguLayoutReady === "1") {
+    if (!inner || !primary) {
       return;
     }
 
-    const state = {
+    const toc = secondary ? secondary.querySelector(".md-nav--secondary") : null;
+    const hasTocItems = !!(toc && toc.querySelector(".md-nav__item"));
+    const rightEnabled = !!secondary && hasTocItems;
+
+    document.body.classList.toggle("bagu-right-disabled", !rightEnabled);
+
+    const state = root.__baguLayoutState || {
       leftWidth: clamp(Number(localStorage.getItem(STORAGE.leftWidth)) || DEFAULTS.leftWidth, getBounds("left").min, getBounds("left").max),
       rightWidth: clamp(Number(localStorage.getItem(STORAGE.rightWidth)) || DEFAULTS.rightWidth, getBounds("right").min, getBounds("right").max),
       leftCollapsed: loadFlag(STORAGE.leftCollapsed),
       rightCollapsed: loadFlag(STORAGE.rightCollapsed)
     };
+    state.rightEnabled = rightEnabled;
 
-    const leftHandle = document.createElement("button");
-    leftHandle.type = "button";
-    leftHandle.className = "bagu-resize-handle bagu-resize-left";
-    leftHandle.setAttribute("aria-label", "拖拽调整左侧栏宽度");
-    leftHandle.addEventListener("pointerdown", (event) => beginResize(root, "left", event));
+    let leftHandle = inner.querySelector(".bagu-resize-left");
+    if (!leftHandle) {
+      leftHandle = document.createElement("button");
+      leftHandle.type = "button";
+      leftHandle.className = "bagu-resize-handle bagu-resize-left";
+      leftHandle.setAttribute("aria-label", "拖拽调整左侧栏宽度");
+      leftHandle.addEventListener("pointerdown", (event) => beginResize(root, "left", event));
+      inner.insertBefore(leftHandle, root.querySelector(".md-content"));
+    }
 
-    const rightHandle = document.createElement("button");
-    rightHandle.type = "button";
-    rightHandle.className = "bagu-resize-handle bagu-resize-right";
-    rightHandle.setAttribute("aria-label", "拖拽调整右侧栏宽度");
-    rightHandle.addEventListener("pointerdown", (event) => beginResize(root, "right", event));
+    let rightHandle = inner.querySelector(".bagu-resize-right");
+    if (rightEnabled) {
+      if (!rightHandle) {
+        rightHandle = document.createElement("button");
+        rightHandle.type = "button";
+        rightHandle.className = "bagu-resize-handle bagu-resize-right";
+        rightHandle.setAttribute("aria-label", "拖拽调整右侧栏宽度");
+        rightHandle.addEventListener("pointerdown", (event) => beginResize(root, "right", event));
+        if (secondary) {
+          inner.insertBefore(rightHandle, secondary);
+        }
+      }
+    } else if (rightHandle) {
+      rightHandle.remove();
+    }
 
-    inner.insertBefore(leftHandle, root.querySelector(".md-content"));
-    inner.insertBefore(rightHandle, secondary);
+    let leftToggle = primary.querySelector(".bagu-toggle-left");
+    if (!leftToggle) {
+      leftToggle = document.createElement("button");
+      leftToggle.type = "button";
+      leftToggle.className = "bagu-sidebar-toggle bagu-toggle-left";
+      leftToggle.addEventListener("click", () => {
+        state.leftCollapsed = !state.leftCollapsed;
+        saveFlag(STORAGE.leftCollapsed, state.leftCollapsed);
+        applyLayoutState(root);
+      });
+      primary.appendChild(leftToggle);
+    }
 
-    const leftToggle = document.createElement("button");
-    leftToggle.type = "button";
-    leftToggle.className = "bagu-sidebar-toggle bagu-toggle-left";
-    leftToggle.addEventListener("click", () => {
-      state.leftCollapsed = !state.leftCollapsed;
-      saveFlag(STORAGE.leftCollapsed, state.leftCollapsed);
-      applyLayoutState(root);
-    });
-    primary.appendChild(leftToggle);
-
-    const rightToggle = document.createElement("button");
-    rightToggle.type = "button";
-    rightToggle.className = "bagu-sidebar-toggle bagu-toggle-right";
-    rightToggle.addEventListener("click", () => {
-      state.rightCollapsed = !state.rightCollapsed;
-      saveFlag(STORAGE.rightCollapsed, state.rightCollapsed);
-      applyLayoutState(root);
-    });
-    secondary.appendChild(rightToggle);
+    let rightToggle = secondary ? secondary.querySelector(".bagu-toggle-right") : null;
+    if (rightEnabled) {
+      if (!rightToggle && secondary) {
+        rightToggle = document.createElement("button");
+        rightToggle.type = "button";
+        rightToggle.className = "bagu-sidebar-toggle bagu-toggle-right";
+        rightToggle.addEventListener("click", () => {
+          state.rightCollapsed = !state.rightCollapsed;
+          saveFlag(STORAGE.rightCollapsed, state.rightCollapsed);
+          applyLayoutState(root);
+        });
+        secondary.appendChild(rightToggle);
+      }
+    } else if (rightToggle) {
+      rightToggle.remove();
+      rightToggle = null;
+    }
 
     state.leftToggle = leftToggle;
     state.rightToggle = rightToggle;
     root.__baguLayoutState = state;
-    inner.dataset.baguLayoutReady = "1";
+    if (!rightEnabled) {
+      document.body.classList.remove("bagu-right-collapsed");
+    }
     applyLayoutState(root);
   }
 

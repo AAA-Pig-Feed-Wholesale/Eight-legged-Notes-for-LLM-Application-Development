@@ -144,6 +144,10 @@ body {
   body.bagu-left-collapsed { --bagu-left-width: 3.5rem; } body.bagu-right-collapsed { --bagu-right-width: 3.5rem; }
   body.bagu-left-collapsed .md-sidebar--primary .md-sidebar__scrollwrap, body.bagu-right-collapsed .md-sidebar--secondary .md-sidebar__scrollwrap, body.bagu-right-collapsed .md-sidebar--secondary .md-nav--secondary { display: none !important; }
   body.bagu-left-collapsed .bagu-resize-left, body.bagu-right-collapsed .bagu-resize-right { pointer-events: none; }
+
+  body.bagu-right-disabled .md-main__inner { grid-template-columns: minmax(0, var(--bagu-left-width)) var(--bagu-handle-width) minmax(0, 1fr); }
+  body.bagu-right-disabled .bagu-resize-right,
+  body.bagu-right-disabled .md-sidebar--secondary { display: none !important; }
 }
 
 /* 侧栏细节与目录树 */
