@@ -130,7 +130,7 @@ body {
   .md-main__inner {
     max-width: none;
     margin-left: 1rem;
-    margin-right: 1rem;
+    margin-right: 0;
     display: grid;
     grid-template-columns: minmax(0, var(--bagu-left-width)) var(--bagu-handle-width) minmax(0, 1fr) var(--bagu-handle-width) minmax(0, var(--bagu-right-width));
     gap: 0.5rem;
