@@ -83,215 +83,6 @@
     };
   }
 
-  function ensureSecondaryToc(root, nav) {
-    if (!nav || nav.querySelector(".md-nav__item")) {
-      return !!(nav && nav.querySelector(".md-nav__item"));
-    }
-
-    const empty = nav.querySelector(".bagu-toc-empty");
-    if (empty) {
-      empty.remove();
-    }
-
-    const contentInner = root.querySelector(".md-content__inner");
-    if (!contentInner) {
-      return false;
-    }
-
-    const headings = Array.from(contentInner.querySelectorAll("h2, h3, h4, h5, h6"))
-      .map((heading) => ({
-        element: heading,
-        level: Number(heading.tagName.slice(1)),
-        label: normalizeText(heading.textContent)
-      }))
-      .filter((heading) => heading.element.id && heading.label && heading.level >= 2 && heading.level <= 6);
-
-    if (!headings.length) {
-      return false;
-    }
-
-    let list = nav.querySelector(".md-nav__list");
-    if (!list) {
-      list = document.createElement("ul");
-      list.className = "md-nav__list";
-      list.setAttribute("data-md-component", "toc");
-      list.setAttribute("data-md-scrollfix", "");
-      nav.appendChild(list);
-    }
-
-    if (!nav.querySelector(".md-nav__title")) {
-      const label = document.createElement("label");
-      label.className = "md-nav__title";
-      label.setAttribute("for", "__toc");
-      label.innerHTML = '<span class="md-nav__icon md-icon"></span>目录';
-      nav.insertBefore(label, list);
-    }
-
-    const stack = [{ level: 1, list }];
-
-    headings.forEach((heading, index) => {
-      while (stack.length && heading.level <= stack[stack.length - 1].level) {
-        stack.pop();
-      }
-
-      const parent = stack[stack.length - 1] || stack[0];
-      const item = document.createElement("li");
-      item.className = "md-nav__item";
-
-      const link = document.createElement("a");
-      link.className = "md-nav__link";
-      link.href = `#${heading.element.id}`;
-      link.classList.add(`bagu-toc-level-${heading.level}`);
-
-      const label = document.createElement("span");
-      label.className = "md-ellipsis";
-      label.textContent = heading.label;
-      link.appendChild(label);
-      item.appendChild(link);
-      parent.list.appendChild(item);
-
-      const nextHeading = headings[index + 1];
-      if (nextHeading && nextHeading.level > heading.level) {
-        const subNav = document.createElement("nav");
-        subNav.className = "md-nav";
-        subNav.setAttribute("aria-label", heading.label);
-
-        const subList = document.createElement("ul");
-        subList.className = "md-nav__list";
-
-        subNav.appendChild(subList);
-        item.appendChild(subNav);
-        stack.push({ level: heading.level, list: subList });
-      }
-    });
-
-    return true;
-  }
-
-  function getRightContext(root) {
-    const secondary = root.querySelector(".md-sidebar--secondary");
-    const toc = secondary ? secondary.querySelector(".md-nav--secondary") : null;
-    const enabled = !!(toc && ensureSecondaryToc(root, toc));
-    return { secondary, enabled };
-  }
-
-  function ensureSidebarChrome(root) {
-    if (!getDesktop()) {
-      return;
-    }
-
-    const primary = root.querySelector(".md-sidebar--primary");
-    const secondary = root.querySelector(".md-sidebar--secondary");
-
-    if (primary && root.__baguLayoutState?.leftToggle) {
-      setupSidebar(root, primary, "Files", root.__baguLayoutState.leftToggle, true);
-    }
-
-    if (secondary && root.__baguLayoutState?.rightToggle) {
-      setupSidebar(root, secondary, "Outline", root.__baguLayoutState.rightToggle, false);
-    }
-  }
-
-  function setupSidebar(root, sidebar, label, toggleButton, withSearch) {
-    const inner = sidebar.querySelector(".md-sidebar__inner");
-    if (!inner) {
-      return;
-    }
-
-    let header = inner.querySelector(".bagu-sidebar-top");
-    if (!header) {
-      header = document.createElement("div");
-      header.className = "bagu-sidebar-top";
-
-      const title = document.createElement("p");
-      title.className = "bagu-sidebar-label";
-      title.textContent = label;
-
-      header.appendChild(title);
-      inner.insertBefore(header, inner.firstChild);
-    }
-
-    toggleButton.classList.add("bagu-collapse-btn");
-    toggleButton.removeAttribute("style");
-    if (toggleButton.parentElement !== header) {
-      header.appendChild(toggleButton);
-    }
-
-    if (withSearch) {
-      let search = inner.querySelector(".bagu-nav-search");
-      if (!search) {
-        search = document.createElement("input");
-        search.className = "bagu-nav-search";
-        search.type = "search";
-        search.placeholder = "搜索文件名";
-        header.insertAdjacentElement("afterend", search);
-
-        search.setAttribute("aria-label", "Search navigation");
-        const onSearch = debounce(() => {
-          filterPrimaryNav(root, search.value);
-        }, 120);
-        search.addEventListener("input", onSearch);
-      }
-    } else {
-      const nav = sidebar.querySelector(".md-nav--secondary");
-      if (nav && !nav.querySelector(".bagu-toc-title")) {
-        const title = document.createElement("h3");
-        title.className = "bagu-toc-title";
-        title.textContent = "二级目录";
-
-        const controls = nav.querySelector(".bagu-toc-controls");
-        if (controls && controls.nextSibling) {
-          nav.insertBefore(title, controls.nextSibling);
-        } else {
-          nav.insertBefore(title, nav.firstChild);
-        }
-      }
-    }
-  }
-
-  function filterPrimaryNav(root, query) {
-    const items = Array.from(root.querySelectorAll(".md-sidebar--primary .md-nav__item"));
-    const links = Array.from(root.querySelectorAll(".md-sidebar--primary .md-nav__link"));
-    const keyword = normalizeText(query).toLowerCase();
-
-    if (!keyword) {
-      items.forEach((item) => item.classList.remove("bagu-nav-hidden"));
-      return;
-    }
-
-    items.forEach((item) => item.classList.add("bagu-nav-hidden"));
-
-    links.forEach((link) => {
-      const text = normalizeText(link.textContent).toLowerCase();
-      if (!text.includes(keyword)) {
-        return;
-      }
-
-      let item = link.closest(".md-nav__item");
-      while (item) {
-        item.classList.remove("bagu-nav-hidden");
-        item = item.parentElement ? item.parentElement.closest(".md-nav__item") : null;
-      }
-    });
-  }
-
-  function suppressSearchInitMessage(root) {
-    const meta = root.querySelector(".md-search-result__meta");
-    if (!meta || meta.__baguSearchObserver) {
-      return;
-    }
-
-    const update = () => {
-      const text = normalizeText(meta.textContent);
-      meta.classList.toggle("bagu-search-init", text.includes("正在初始化搜索引擎"));
-    };
-
-    update();
-    const observer = new MutationObserver(update);
-    observer.observe(meta, { characterData: true, childList: true, subtree: true });
-    meta.__baguSearchObserver = observer;
-  }
-
   function getPageKey() {
     return location.pathname;
   }
@@ -385,7 +176,7 @@
       "input:not([disabled])",
       "select:not([disabled])",
       "textarea:not([disabled])",
-      "[tabindex]:not([tabindex=\"-1\"])"
+      '[tabindex]:not([tabindex="-1"])'
     ].join(",");
     return Array.from(container.querySelectorAll(selector))
       .filter((element) => element.getClientRects().length > 0);
@@ -425,6 +216,211 @@
     setIconButton(button, collapsed ? "chevronLeft" : "chevronRight", collapsed ? "展开右侧栏" : "收起右侧栏");
   }
 
+  function cloneNodeArray(nodes) {
+    return nodes.map((node) => node.cloneNode(true));
+  }
+
+  function suppressSearchInitMessage(root) {
+    const meta = root.querySelector(".md-search-result__meta");
+    if (!meta || meta.__baguSearchObserver) {
+      return;
+    }
+
+    const update = () => {
+      const text = normalizeText(meta.textContent);
+      meta.classList.toggle("bagu-search-init", text.includes("正在初始化搜索引擎"));
+    };
+
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(meta, { characterData: true, childList: true, subtree: true });
+    meta.__baguSearchObserver = observer;
+  }
+
+  function filterPrimaryNav(root, query) {
+    const items = Array.from(root.querySelectorAll(".md-sidebar--primary .md-nav__item"));
+    const links = Array.from(root.querySelectorAll(".md-sidebar--primary .md-nav__link"));
+    const keyword = normalizeText(query).toLowerCase();
+
+    if (!keyword) {
+      items.forEach((item) => item.classList.remove("bagu-nav-hidden"));
+      return;
+    }
+
+    items.forEach((item) => item.classList.add("bagu-nav-hidden"));
+
+    links.forEach((link) => {
+      const text = normalizeText(link.textContent).toLowerCase();
+      if (!text.includes(keyword)) {
+        return;
+      }
+
+      let item = link.closest(".md-nav__item");
+      while (item) {
+        item.classList.remove("bagu-nav-hidden");
+        item = item.parentElement ? item.parentElement.closest(".md-nav__item") : null;
+      }
+    });
+  }
+
+  function ensureSecondaryToc(root, nav) {
+    if (!nav) {
+      return false;
+    }
+
+    const contentInner = root.querySelector(".md-content__inner");
+    if (!contentInner) {
+      return false;
+    }
+
+    const empty = nav.querySelector(".bagu-toc-empty");
+    if (empty) {
+      empty.remove();
+    }
+
+    const existingList = nav.querySelector(".md-nav__list");
+    if (existingList) {
+      existingList.remove();
+    }
+
+    const existingTitle = nav.querySelector(".md-nav__title");
+    if (existingTitle) {
+      existingTitle.remove();
+    }
+
+    const headings = Array.from(contentInner.querySelectorAll("h2, h3, h4, h5, h6"))
+      .map((heading) => ({
+        element: heading,
+        level: Number(heading.tagName.slice(1)),
+        label: normalizeText(heading.textContent)
+      }))
+      .filter((heading) => heading.element.id && heading.label && heading.level >= 2 && heading.level <= 6);
+
+    if (!headings.length) {
+      const emptyMessage = document.createElement("p");
+      emptyMessage.className = "bagu-toc-empty";
+      emptyMessage.textContent = "当前页面暂无可用目录";
+      nav.appendChild(emptyMessage);
+      return false;
+    }
+
+    const list = document.createElement("ul");
+    list.className = "md-nav__list";
+    list.setAttribute("data-md-component", "toc");
+    list.setAttribute("data-md-scrollfix", "");
+
+    const label = document.createElement("label");
+    label.className = "md-nav__title";
+    label.setAttribute("for", "__toc");
+    label.innerHTML = '<span class="md-nav__icon md-icon"></span>目录';
+
+    nav.appendChild(label);
+    nav.appendChild(list);
+
+    const stack = [{ level: 1, list }];
+
+    headings.forEach((heading, index) => {
+      while (stack.length && heading.level <= stack[stack.length - 1].level) {
+        stack.pop();
+      }
+
+      const parent = stack[stack.length - 1] || stack[0];
+      const item = document.createElement("li");
+      item.className = "md-nav__item";
+
+      const link = document.createElement("a");
+      link.className = "md-nav__link";
+      link.href = `#${heading.element.id}`;
+      link.classList.add(`bagu-toc-level-${heading.level}`);
+
+      const text = document.createElement("span");
+      text.className = "md-ellipsis";
+      text.textContent = heading.label;
+      link.appendChild(text);
+      item.appendChild(link);
+      parent.list.appendChild(item);
+
+      const nextHeading = headings[index + 1];
+      if (nextHeading && nextHeading.level > heading.level) {
+        const subNav = document.createElement("nav");
+        subNav.className = "md-nav";
+        subNav.setAttribute("aria-label", heading.label);
+
+        const subList = document.createElement("ul");
+        subList.className = "md-nav__list";
+        subNav.appendChild(subList);
+        item.appendChild(subNav);
+        stack.push({ level: heading.level, list: subList });
+      }
+    });
+
+    return true;
+  }
+
+  function getRightContext(root) {
+    const secondary = root.querySelector(".md-sidebar--secondary");
+    const toc = secondary ? secondary.querySelector(".md-nav--secondary") : null;
+    const enabled = !!(toc && ensureSecondaryToc(root, toc));
+    return { secondary, toc, enabled };
+  }
+
+  function setupSidebar(root, sidebar, label, toggleButton, withSearch) {
+    const inner = sidebar.querySelector(".md-sidebar__inner");
+    if (!inner) {
+      return;
+    }
+
+    let header = inner.querySelector(".bagu-sidebar-top");
+    if (!header) {
+      header = document.createElement("div");
+      header.className = "bagu-sidebar-top";
+
+      const title = document.createElement("p");
+      title.className = "bagu-sidebar-label";
+      title.textContent = label;
+
+      header.appendChild(title);
+      inner.insertBefore(header, inner.firstChild);
+    }
+
+    toggleButton.classList.add("bagu-collapse-btn");
+    toggleButton.removeAttribute("style");
+    if (toggleButton.parentElement !== header) {
+      header.appendChild(toggleButton);
+    }
+
+    if (withSearch) {
+      let search = inner.querySelector(".bagu-nav-search");
+      if (!search) {
+        search = document.createElement("input");
+        search.className = "bagu-nav-search";
+        search.type = "search";
+        search.placeholder = "搜索文件名";
+        search.setAttribute("aria-label", "Search navigation");
+        header.insertAdjacentElement("afterend", search);
+
+        const onSearch = debounce(() => {
+          filterPrimaryNav(root, search.value);
+        }, 120);
+        search.addEventListener("input", onSearch);
+      }
+    } else {
+      const nav = sidebar.querySelector(".md-nav--secondary");
+      if (nav && !nav.querySelector(".bagu-toc-title")) {
+        const title = document.createElement("h3");
+        title.className = "bagu-toc-title";
+        title.textContent = "二级目录";
+
+        const controls = nav.querySelector(".bagu-toc-controls");
+        if (controls && controls.nextSibling) {
+          nav.insertBefore(title, controls.nextSibling);
+        } else {
+          nav.insertBefore(title, nav.firstChild);
+        }
+      }
+    }
+  }
+
   function applyLayoutState(root) {
     const state = root.__baguLayoutState;
     if (!state) {
@@ -433,6 +429,8 @@
 
     document.body.classList.toggle("bagu-left-collapsed", !!state.leftCollapsed);
     document.body.classList.toggle("bagu-right-collapsed", !!state.rightEnabled && !!state.rightCollapsed);
+    document.body.classList.toggle("bagu-right-disabled", !state.rightEnabled);
+
     document.documentElement.style.setProperty("--bagu-left-width", `${state.leftWidth}px`);
     document.documentElement.style.setProperty("--bagu-right-width", `${state.rightWidth}px`);
 
@@ -513,7 +511,6 @@
     }
 
     const right = getRightContext(root);
-    document.body.classList.toggle("bagu-right-disabled", !right.enabled);
 
     const state = root.__baguLayoutState || {
       leftWidth: clamp(Number(safeGetItem(STORAGE.leftWidth)) || DEFAULTS.leftWidth, getBounds("left").min, getBounds("left").max),
@@ -521,6 +518,7 @@
       leftCollapsed: loadFlag(STORAGE.leftCollapsed),
       rightCollapsed: loadFlag(STORAGE.rightCollapsed)
     };
+
     state.rightEnabled = right.enabled;
 
     let leftHandle = inner.querySelector(".bagu-resize-left");
@@ -547,6 +545,7 @@
       }
     } else if (rightHandle) {
       rightHandle.remove();
+      rightHandle = null;
     }
 
     let leftToggle = primary.querySelector(".bagu-toggle-left");
@@ -584,11 +583,24 @@
     state.rightToggle = rightToggle;
     root.__baguLayoutState = state;
 
-    if (!right.enabled) {
-      document.body.classList.remove("bagu-right-collapsed");
+    applyLayoutState(root);
+  }
+
+  function ensureSidebarChrome(root) {
+    if (!getDesktop()) {
+      return;
     }
 
-    applyLayoutState(root);
+    const primary = root.querySelector(".md-sidebar--primary");
+    const secondary = root.querySelector(".md-sidebar--secondary");
+
+    if (primary && root.__baguLayoutState?.leftToggle) {
+      setupSidebar(root, primary, "Files", root.__baguLayoutState.leftToggle, true);
+    }
+
+    if (secondary && root.__baguLayoutState?.rightToggle) {
+      setupSidebar(root, secondary, "Outline", root.__baguLayoutState.rightToggle, false);
+    }
   }
 
   function ensureTocControls(root, nav) {
@@ -639,38 +651,71 @@
     }
   }
 
-  function syncTocCurrent(root) {
+  function setActiveToc(root, id) {
     const nav = root.querySelector(".md-sidebar--secondary .md-nav--secondary");
     if (!nav) {
       return;
     }
 
-    const currentId = root.__baguEducationState?.currentHeadingId || (location.hash ? location.hash.slice(1) : "");
-    const topItems = Array.from(nav.querySelectorAll(":scope > .md-nav__list > .bagu-toc-item"));
-    topItems.forEach((item) => item.classList.remove("bagu-toc-current"));
+    const links = Array.from(nav.querySelectorAll("a.md-nav__link"));
+    const items = Array.from(nav.querySelectorAll(".bagu-toc-item"));
 
-    if (!currentId) {
+    links.forEach((link) => {
+      const active = !!id && link.getAttribute("href") === `#${id}`;
+      link.classList.toggle("md-nav__link--active", active);
+      if (active) {
+        link.setAttribute("aria-current", "location");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    });
+
+    items.forEach((item) => item.classList.remove("bagu-toc-current"));
+
+    if (!id) {
       return;
     }
 
-    const link = nav.querySelector(`a.md-nav__link[href="#${escapeSelector(currentId)}"]`);
+    const link = nav.querySelector(`a.md-nav__link[href="#${escapeSelector(id)}"]`);
     if (!link) {
       return;
     }
 
+    const topItems = Array.from(nav.querySelectorAll(":scope > .md-nav__list > .bagu-toc-item"));
     const topItem = topItems.find((item) => item.contains(link));
     if (topItem) {
       topItem.classList.add("bagu-toc-current");
     }
+
+    const parentItems = [];
+    let item = link.closest(".bagu-toc-item");
+    while (item) {
+      parentItems.push(item);
+      item = item.parentElement ? item.parentElement.closest(".bagu-toc-item") : null;
+    }
+
+    parentItems.forEach((parentItem) => {
+      parentItem.classList.remove("bagu-collapsed");
+      const toggle = parentItem.querySelector(":scope > .bagu-toc-row > .bagu-toc-toggle");
+      if (toggle) {
+        toggle.innerHTML = icon("chevronDown");
+      }
+    });
+  }
+
+  function syncTocCurrent(root) {
+    const currentId = root.__baguEducationState?.currentHeadingId || (location.hash ? location.hash.slice(1) : "");
+    setActiveToc(root, currentId);
   }
 
   function buildTocTree(root) {
     const nav = root.querySelector(".md-sidebar--secondary .md-nav--secondary");
-    if (!nav || nav.dataset.baguTocReady === "1") {
+    if (!nav) {
       return;
     }
 
     if (!ensureSecondaryToc(root, nav)) {
+      nav.dataset.baguTocReady = "0";
       return;
     }
 
@@ -732,6 +777,7 @@
 
   function buildFlashcards(contentInner) {
     const elements = Array.from(contentInner.children);
+    const cards = [];
     let currentCard = null;
     let currentContent = null;
 
@@ -766,15 +812,21 @@
 
         element.parentNode.insertBefore(currentCard, element);
         element.classList.add("bagu-h3-anchor");
+        currentCard.__baguQuestionHtml = cloneH3.outerHTML;
+        currentCard.__baguAnswerNodes = [];
+        cards.push(currentCard);
         return;
       }
 
       if (currentCard && currentContent) {
-        currentContent.appendChild(element);
+        const cloned = element.cloneNode(true);
+        currentContent.appendChild(cloned);
+        currentCard.__baguAnswerNodes.push(cloned.cloneNode(true));
+        element.remove();
       }
     });
 
-    return Array.from(contentInner.querySelectorAll(".bagu-flashcard"));
+    return cards;
   }
 
   function collectHeadings(contentInner) {
@@ -1013,410 +1065,335 @@
     const currentSection = currentHeading ? currentHeading.label : LABELS.currentSectionFallback;
 
     state.currentHeadingId = currentHeading ? currentHeading.id : "";
-    state.progressBar.style.width = `${progress}%`;
+
+    state.progressBar.style.width = progressText;
     state.progressValue.textContent = progressText;
     state.currentSection.textContent = currentSection;
 
-    ui.mobileProgressBar.style.width = `${progress}%`;
-    const progressLabel = ui.mobileProgressToggle.querySelector("span");
-    if (progressLabel) {
-      progressLabel.textContent = `\u8fdb\u5ea6 ${progressText}`;
-    }
+    ui.mobileProgressBar.style.width = progressText;
     ui.mobileSection.textContent = currentSection;
 
-    syncMobileDock(root);
     syncTocCurrent(root);
-  }
-
-  function requestReadingUpdate(root) {
-    if (root.__baguReadingUpdateRaf) {
-      return;
-    }
-
-    root.__baguReadingUpdateRaf = window.requestAnimationFrame(() => {
-      root.__baguReadingUpdateRaf = 0;
-      updateReadingState(root);
-    });
-  }
-
-  function revealHashTarget(root) {
-    if (!location.hash) {
-      return;
-    }
-
-    const target = document.getElementById(location.hash.slice(1));
-    if (!target || !target.classList.contains("bagu-h3-anchor")) {
-      return;
-    }
-
-    const card = target.previousElementSibling;
-    if (card && card.classList.contains("bagu-flashcard")) {
-      card.open = true;
-      updateCardsToggle(root);
-    }
-  }
-
-  function clearReadingState(root) {
-    root.__baguEducationState = null;
-    closeDeck(root);
     syncMobileDock(root);
   }
 
-  function initEducationFeatures(root) {
-    const contentInner = root.querySelector(".md-content__inner");
-    if (!contentInner || contentInner.dataset.eduReady === "1" || document.body.classList.contains("bagu-home-hero")) {
-      if (document.body.classList.contains("bagu-home-hero")) {
-        clearReadingState(root);
-      }
-      return;
-    }
+  function createDeckCard(state, card, index) {
+    const wrapper = document.createElement("article");
+    wrapper.className = "bagu-deck-card";
 
-    const cards = buildFlashcards(contentInner);
-    const toolbar = buildToolbar(cards.length);
-    const h1 = contentInner.querySelector("h1");
+    const question = document.createElement("div");
+    question.className = "bagu-deck-card-question";
+    question.innerHTML = card.__baguQuestionHtml || `<h3>卡片 ${index + 1}</h3>`;
 
-    if (h1) {
-      h1.parentNode.insertBefore(toolbar, h1.nextSibling);
-    } else {
-      contentInner.insertBefore(toolbar, contentInner.firstChild);
-    }
+    const answer = document.createElement("div");
+    answer.className = "bagu-deck-card-answer";
 
-    const cardsToggleButton = toolbar.querySelector(".bagu-cards-toggle");
-    const progressToggleButton = toolbar.querySelector(".bagu-progress-toggle");
-    const progressBar = toolbar.querySelector(".bagu-progress-bar");
-    const progressValue = toolbar.querySelector(".bagu-progress-value");
-    const currentSection = toolbar.querySelector(".bagu-current-section");
-    const deckButton = toolbar.querySelector(".bagu-open-deck");
+    const answerNodes = card.__baguAnswerNodes && card.__baguAnswerNodes.length
+      ? cloneNodeArray(card.__baguAnswerNodes)
+      : Array.from(card.querySelectorAll(".bagu-flashcard-content > *")).map((node) => node.cloneNode(true));
 
-    cards.forEach((card) => {
-      card.addEventListener("toggle", () => updateCardsToggle(root));
-    });
+    answerNodes.forEach((node) => answer.appendChild(node));
+    answer.hidden = !state.showAnswer;
 
-    cardsToggleButton.addEventListener("click", () => {
-      const allOpen = cards.every((card) => card.open);
-      cards.forEach((card) => {
-        card.open = !allOpen;
-      });
-      updateCardsToggle(root);
-    });
+    wrapper.appendChild(question);
+    wrapper.appendChild(answer);
 
-    progressToggleButton.addEventListener("click", () => toggleProgressCollapsed(root));
-    deckButton.addEventListener("click", () => openDeck(root));
-    deckButton.setAttribute("aria-haspopup", "dialog");
-    deckButton.setAttribute("aria-controls", "bagu-deck-dialog");
-
-    const state = {
-      contentInner,
-      toolbar,
-      cards,
-      cardsToggleButton,
-      progressToggleButton,
-      progressBar,
-      progressValue,
-      currentSection,
-      headings: collectHeadings(contentInner),
-      progressCollapsed: loadFlag(STORAGE.progressCollapsed),
-      deckCards: cards.map((card) => ({
-        title: normalizeText(card.querySelector(".bagu-flashcard-title-text h3")?.textContent || ""),
-        html: card.querySelector(".bagu-flashcard-content")?.innerHTML || ""
-      }))
-    };
-
-    root.__baguEducationState = state;
-    contentInner.dataset.eduReady = "1";
-
-    setProgressControls(root, state.progressCollapsed);
-    updateCardsToggle(root);
-    syncMobileDock(root);
-    requestReadingUpdate(root);
-    revealHashTarget(root);
+    return { wrapper, answer };
   }
 
   function renderDeck(root) {
     const ui = ensureGlobalUi(root);
-    const state = root.__baguEducationState;
-
-    if (!state || !ui.deckState || !state.deckCards.length) {
+    const state = ui.deckState;
+    if (!state || !state.cards.length) {
+      ui.deckStage.innerHTML = "";
+      ui.deckCounter.textContent = "0 / 0";
+      ui.deckPrev.disabled = true;
+      ui.deckNext.disabled = true;
+      setIconButton(ui.deckAnswer, "cardsOpen", LABELS.showAnswer);
       return;
     }
 
-    const index = ui.deckState.index;
-    const card = state.deckCards[index];
-    const isAnswerVisible = ui.deckState.openAnswers.has(index);
+    const currentCard = state.cards[state.index];
+    ui.deckStage.innerHTML = "";
 
-    ui.deckCounter.textContent = `${index + 1} / ${state.deckCards.length}`;
-    setButtonLabel(ui.deckAnswer, "cardsOpen", isAnswerVisible ? LABELS.hideAnswer : LABELS.showAnswer);
-    ui.deckAnswer.setAttribute("aria-pressed", isAnswerVisible ? "true" : "false");
-    ui.deckAnswer.setAttribute("aria-controls", "bagu-deck-answer");
-    ui.deckPrev.disabled = index === 0;
-    ui.deckNext.disabled = index === state.deckCards.length - 1;
+    const { wrapper } = createDeckCard(state, currentCard, state.index);
+    ui.deckStage.appendChild(wrapper);
 
-    ui.deckStage.innerHTML = `
-      <article class="bagu-deck-card">
-        <div class="bagu-deck-card-kicker">Swipe Left / Right</div>
-        <h3>${card.title}</h3>
-        <div class="bagu-deck-card-answer ${isAnswerVisible ? "is-visible" : ""}" id="bagu-deck-answer">
-          ${card.html}
-        </div>
-      </article>
-    `;
+    ui.deckCounter.textContent = `${state.index + 1} / ${state.cards.length}`;
+    ui.deckPrev.disabled = state.index <= 0;
+    ui.deckNext.disabled = state.index >= state.cards.length - 1;
+    setIconButton(ui.deckAnswer, state.showAnswer ? "cardsClosed" : "cardsOpen", state.showAnswer ? LABELS.hideAnswer : LABELS.showAnswer);
   }
 
   function openDeck(root) {
+    const ui = ensureGlobalUi(root);
     const state = root.__baguEducationState;
-    if (!state || !state.deckCards.length) {
+    if (!state || !state.cards.length) {
       return;
     }
 
-    const ui = ensureGlobalUi(root);
-    ui.lastActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    ui.lastActiveElement = document.activeElement;
     ui.deckState = {
+      cards: state.cards,
       index: 0,
-      openAnswers: new Set([0])
+      showAnswer: false
     };
 
-    ui.deckOverlay.dataset.open = "1";
-    ui.deckOverlay.setAttribute("aria-hidden", "false");
-    document.body.classList.add("bagu-deck-open");
     renderDeck(root);
-    if (ui.deckDialog) {
-      if (!ui.deckFocusHandler) {
-        ui.deckFocusHandler = (event) => trapFocus(ui.deckDialog, event);
-      }
-      ui.deckDialog.addEventListener("keydown", ui.deckFocusHandler);
-      window.setTimeout(() => {
-        ui.deckDialog.focus({ preventScroll: true });
-      }, 0);
+    ui.deckOverlay.classList.add("is-open");
+    ui.deckOverlay.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+
+    if (!ui.deckFocusHandler) {
+      ui.deckFocusHandler = (event) => {
+        if (event.key === "Escape") {
+          closeDeck(root);
+          return;
+        }
+        trapFocus(ui.deckDialog, event);
+      };
     }
+    document.addEventListener("keydown", ui.deckFocusHandler);
+    window.setTimeout(() => {
+      ui.deckDialog?.focus();
+    }, 0);
   }
 
   function closeDeck(root) {
     const ui = ensureGlobalUi(root);
-    ui.deckOverlay.dataset.open = "0";
+    if (!ui.deckOverlay.classList.contains("is-open")) {
+      return;
+    }
+
+    ui.deckOverlay.classList.remove("is-open");
     ui.deckOverlay.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    if (ui.deckFocusHandler) {
+      document.removeEventListener("keydown", ui.deckFocusHandler);
+    }
     ui.deckState = null;
-    document.body.classList.remove("bagu-deck-open");
-    if (ui.deckDialog && ui.deckFocusHandler) {
-      ui.deckDialog.removeEventListener("keydown", ui.deckFocusHandler);
-    }
+
     if (ui.lastActiveElement && typeof ui.lastActiveElement.focus === "function") {
-      ui.lastActiveElement.focus({ preventScroll: true });
+      ui.lastActiveElement.focus();
     }
-    ui.lastActiveElement = null;
   }
 
   function moveDeck(root, delta) {
     const ui = ensureGlobalUi(root);
-    const state = root.__baguEducationState;
-
-    if (!ui.deckState || !state || !state.deckCards.length) {
+    const state = ui.deckState;
+    if (!state) {
       return;
     }
 
-    const nextIndex = clamp(ui.deckState.index + delta, 0, state.deckCards.length - 1);
-    if (nextIndex === ui.deckState.index) {
+    const nextIndex = clamp(state.index + delta, 0, state.cards.length - 1);
+    if (nextIndex === state.index) {
       return;
     }
 
-    ui.deckState.index = nextIndex;
-    ui.deckState.openAnswers.add(nextIndex);
+    state.index = nextIndex;
     renderDeck(root);
   }
 
   function toggleDeckAnswer(root) {
     const ui = ensureGlobalUi(root);
-    if (!ui.deckState) {
+    const state = ui.deckState;
+    if (!state) {
       return;
     }
 
-    const index = ui.deckState.index;
-    if (ui.deckState.openAnswers.has(index)) {
-      ui.deckState.openAnswers.delete(index);
-    } else {
-      ui.deckState.openAnswers.add(index);
-    }
+    state.showAnswer = !state.showAnswer;
     renderDeck(root);
   }
 
-  function bindGlobalListeners(root) {
-    if (root.__baguListenersBound) {
-      return;
-    }
-
-    window.addEventListener("scroll", () => requestReadingUpdate(root), { passive: true });
-    window.addEventListener("resize", () => {
-      if (root.__baguResizeTimer) {
-        window.clearTimeout(root.__baguResizeTimer);
-      }
-      root.__baguResizeTimer = window.setTimeout(() => {
-        ensureLayoutControls(root);
-        if (root.__baguLayoutState) {
-          root.__baguLayoutState.leftWidth = clamp(root.__baguLayoutState.leftWidth, getBounds("left").min, getBounds("left").max);
-          root.__baguLayoutState.rightWidth = clamp(root.__baguLayoutState.rightWidth, getBounds("right").min, getBounds("right").max);
-          applyLayoutState(root);
-        }
-        syncMobileDock(root);
-        requestReadingUpdate(root);
-      }, 120);
-    });
-
-    window.addEventListener("hashchange", () => {
-      revealHashTarget(root);
-      requestReadingUpdate(root);
-      syncTocCurrent(root);
-    });
-
-    window.addEventListener("keydown", (event) => {
-      const ui = ensureGlobalUi(root);
-      if (ui.deckOverlay.dataset.open !== "1") {
-        return;
-      }
-
-      const target = event.target;
-      const isEditable = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable);
-      if (isEditable && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
-        return;
-      }
-
-      if (event.key === "Escape") {
-        closeDeck(root);
-      } else if (event.key === "ArrowLeft") {
-        moveDeck(root, -1);
-      } else if (event.key === "ArrowRight") {
-        moveDeck(root, 1);
-      }
-    });
-
-    root.__baguListenersBound = true;
-  }
-
-  function getActiveTocId(root) {
-    return root.__baguTocState?.activeId || root.__baguEducationState?.currentHeadingId || (location.hash ? location.hash.slice(1) : "");
-  }
-
-  function setActiveToc(root, id) {
-    const nav = root.querySelector(".md-sidebar--secondary .md-nav--secondary");
-    if (!nav) {
-      return;
-    }
-
-    const links = Array.from(nav.querySelectorAll(".md-nav__link"));
-    links.forEach((link) => link.classList.remove("md-nav__link--active"));
-
-    const topItems = Array.from(nav.querySelectorAll(":scope > .md-nav__list > .bagu-toc-item"));
-    topItems.forEach((item) => item.classList.remove("bagu-toc-current"));
-
-    if (!id) {
-      return;
-    }
-
-    const link = nav.querySelector(`a.md-nav__link[href="#${escapeSelector(id)}"]`);
-    if (!link) {
-      return;
-    }
-
-    link.classList.add("md-nav__link--active");
-    const topItem = topItems.find((item) => item.contains(link));
-    if (topItem) {
-      topItem.classList.add("bagu-toc-current");
-    }
-
-    const collapsedState = loadJSON(STORAGE.tocCollapsed, {});
-    const pageKey = getPageKey();
-    collapsedState[pageKey] = collapsedState[pageKey] || {};
-
-    let current = link.closest(".bagu-toc-item");
-    while (current) {
-      if (current.classList.contains("bagu-collapsed")) {
-        current.classList.remove("bagu-collapsed");
-        const tocId = current.dataset.tocId;
-        if (tocId) {
-          collapsedState[pageKey][tocId] = false;
-        }
-        const toggle = current.querySelector(":scope > .bagu-toc-row .bagu-toc-toggle");
-        if (toggle) {
-          toggle.innerHTML = icon("chevronDown");
-        }
-      }
-      current = current.parentElement ? current.parentElement.closest(".bagu-toc-item") : null;
-    }
-
-    saveJSON(STORAGE.tocCollapsed, collapsedState);
-  }
-
-  function syncTocCurrent(root) {
-    const currentId = getActiveTocId(root);
-    setActiveToc(root, currentId);
-  }
-
   function bindTocObserver(root) {
-    if (root.__baguTocObserver) {
-      root.__baguTocObserver.disconnect();
-      root.__baguTocObserver = null;
-    }
-
     const contentInner = root.querySelector(".md-content__inner");
-    if (!contentInner) {
+    if (!contentInner || contentInner.__baguTocObserverBound) {
       return;
     }
 
-    const headings = Array.from(contentInner.querySelectorAll("h2[id], h3[id], h4[id], h5[id], h6[id]"));
+    const headings = Array.from(contentInner.querySelectorAll("h2, .bagu-h3-anchor"));
     if (!headings.length) {
-      const nav = root.querySelector(".md-sidebar--secondary .md-nav--secondary");
-      if (nav) {
-        nav.innerHTML = '<div class="bagu-toc-empty">当前文档没有二级目录</div>';
-      }
       return;
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible.length) {
-          const id = visible[0].target.id;
-          const state = root.__baguTocState || { compact: loadFlagWithDefault(STORAGE.tocCompact, true) };
-          state.activeId = id;
-          root.__baguTocState = state;
-          setActiveToc(root, id);
-        }
-      },
-      {
-        rootMargin: "-18% 0px -72% 0px",
-        threshold: [0, 1]
+    const state = root.__baguEducationState;
+    const observer = new IntersectionObserver((entries) => {
+      if (!state) {
+        return;
       }
-    );
+
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+
+      if (!visible.length) {
+        return;
+      }
+
+      const top = visible[0].target;
+      state.currentHeadingId = top.id || "";
+      syncTocCurrent(root);
+    }, {
+      root: null,
+      rootMargin: "-15% 0px -70% 0px",
+      threshold: [0, 1]
+    });
 
     headings.forEach((heading) => observer.observe(heading));
-    root.__baguTocObserver = observer;
+    contentInner.__baguTocObserverBound = true;
+    contentInner.__baguTocObserver = observer;
+  }
+
+  function initEducationFeatures(root) {
+    const contentInner = root.querySelector(".md-content__inner");
+    if (!contentInner || contentInner.dataset.eduReady === "1") {
+      return;
+    }
+
+    const cards = buildFlashcards(contentInner);
+    const toolbar = buildToolbar(cards.length);
+    contentInner.insertBefore(toolbar, contentInner.firstChild);
+
+    const state = {
+      toolbar,
+      cards,
+      headings: collectHeadings(contentInner),
+      currentHeadingId: "",
+      currentSection: toolbar.querySelector(".bagu-current-section"),
+      progressBar: toolbar.querySelector(".bagu-progress-bar"),
+      progressValue: toolbar.querySelector(".bagu-progress-value"),
+      progressToggleButton: toolbar.querySelector(".bagu-progress-toggle"),
+      cardsToggleButton: toolbar.querySelector(".bagu-cards-toggle"),
+      deckButton: toolbar.querySelector(".bagu-open-deck"),
+      progressCollapsed: loadFlag(STORAGE.progressCollapsed)
+    };
+
+    root.__baguEducationState = state;
+
+    state.progressToggleButton.addEventListener("click", () => toggleProgressCollapsed(root));
+    state.cardsToggleButton.addEventListener("click", () => {
+      const allOpen = state.cards.every((card) => card.open);
+      state.cards.forEach((card) => {
+        card.open = !allOpen;
+      });
+      updateCardsToggle(root);
+    });
+    state.deckButton.addEventListener("click", () => openDeck(root));
+
+    state.cards.forEach((card) => {
+      card.addEventListener("toggle", () => updateCardsToggle(root));
+    });
+
+    setProgressControls(root, state.progressCollapsed);
+    updateCardsToggle(root);
+
+    contentInner.dataset.eduReady = "1";
+  }
+
+  function isHomePage(root) {
+    const firstHeading = root.querySelector(".md-content__inner > h1");
+    if (!firstHeading) {
+      return false;
+    }
+    const text = normalizeText(firstHeading.textContent).toLowerCase();
+    return text.includes("home") || text.includes("首页");
+  }
+
+  function initHomeHero(root) {
+    document.body.classList.toggle("bagu-home-hero", isHomePage(root));
+  }
+
+  function cleanupRoot(root) {
+    const contentInner = root.querySelector(".md-content__inner");
+    if (contentInner && contentInner.__baguTocObserver) {
+      contentInner.__baguTocObserver.disconnect();
+      contentInner.__baguTocObserver = null;
+      contentInner.__baguTocObserverBound = false;
+    }
   }
 
   function init() {
-    const root = document;
-    document.body.classList.toggle("bagu-home-hero", !!root.querySelector(".hero-shell"));
-
-    ensureGlobalUi(root);
-    suppressSearchInitMessage(root);
-    ensureLayoutControls(root);
-    ensureSidebarChrome(root);
-    buildTocTree(root);
-    bindTocObserver(root);
-    bindGlobalListeners(root);
-    initEducationFeatures(root);
-
-    if (document.body.classList.contains("bagu-home-hero")) {
-      clearReadingState(root);
+    const root = document.querySelector(".md-main");
+    if (!root) {
+      return;
     }
 
-    requestReadingUpdate(root);
+    cleanupRoot(root);
+    initHomeHero(root);
+    initEducationFeatures(root);
+    buildTocTree(root);
+    bindTocObserver(root);
+    ensureLayoutControls(root);
+    ensureSidebarChrome(root);
+    suppressSearchInitMessage(root);
+    updateReadingState(root);
   }
+
+  const debouncedRefresh = debounce(() => {
+    init();
+  }, 80);
+
+  document.addEventListener("scroll", () => {
+    const root = document.querySelector(".md-main");
+    if (!root || !root.__baguEducationState) {
+      return;
+    }
+    updateReadingState(root);
+  }, { passive: true });
+
+  window.addEventListener("resize", () => {
+    const root = document.querySelector(".md-main");
+    if (!root) {
+      return;
+    }
+
+    if (root.__baguLayoutState) {
+      const state = root.__baguLayoutState;
+      state.leftWidth = clamp(state.leftWidth, getBounds("left").min, getBounds("left").max);
+      state.rightWidth = clamp(state.rightWidth, getBounds("right").min, getBounds("right").max);
+      applyLayoutState(root);
+    }
+
+    syncMobileDock(root);
+    debouncedRefresh();
+  });
+
+  window.addEventListener("hashchange", () => {
+    const root = document.querySelector(".md-main");
+    if (!root) {
+      return;
+    }
+    const state = root.__baguEducationState;
+    if (state) {
+      state.currentHeadingId = location.hash ? location.hash.slice(1) : "";
+      syncTocCurrent(root);
+      updateReadingState(root);
+    }
+  });
 
   document.addEventListener("DOMContentLoaded", init);
 
-  if (typeof document$ !== "undefined" && document$.subscribe) {
-    document$.subscribe(() => {
-      window.setTimeout(init, 0);
+  if (document.readyState === "interactive" || document.readyState === "complete") {
+    init();
+  }
+
+  const bodyObserver = new MutationObserver((mutations) => {
+    const shouldRefresh = mutations.some((mutation) => {
+      if (mutation.type === "childList") {
+        return mutation.addedNodes.length || mutation.removedNodes.length;
+      }
+      return false;
+    });
+
+    if (shouldRefresh) {
+      debouncedRefresh();
+    }
+  });
+
+  if (document.body) {
+    bodyObserver.observe(document.body, {
+      childList: true,
+      subtree: true
     });
   }
 })();

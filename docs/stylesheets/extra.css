@@ -829,216 +829,357 @@ body.bagu-home-hero .md-content__inner > h1:first-of-type { display: none; }
   left: max(0.9rem, env(safe-area-inset-left));
   right: max(0.9rem, env(safe-area-inset-right));
   bottom: max(0.9rem, env(safe-area-inset-bottom));
-  z-index: 25;
-  padding: 0.9rem 1rem calc(0.9rem + env(safe-area-inset-bottom));
+  z-index: 120;
   border: 1px solid var(--border-color);
   border-radius: 18px;
-  background: rgba(248, 250, 252, 0.94);
+  background: rgba(255, 252, 246, 0.96);
+  box-shadow: var(--shadow-card-hover);
   backdrop-filter: blur(14px);
-  box-shadow: 0 18px 48px -20px rgba(15, 23, 42, 0.45);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 0.75rem 0.9rem;
 }
-.bagu-mobile-dock[hidden] { display: none !important; }
-.bagu-mobile-dock-main { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.85rem; }
-.bagu-mobile-dock-copy { min-width: 0; flex: 1; }
-.bagu-mobile-dock-label { display: block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.2rem; }
-.bagu-mobile-current-section { display: -webkit-box; overflow: hidden; color: var(--text-main); font-size: 0.92rem; line-height: 1.45; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.bagu-mobile-dock-actions { display: flex; gap: 0.45rem; flex-wrap: wrap; justify-content: flex-end; }
+.bagu-mobile-dock-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+.bagu-mobile-dock-copy {
+  min-width: 0;
+}
+.bagu-mobile-dock-label {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.bagu-mobile-current-section {
+  display: block;
+  font-size: 0.92rem;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bagu-mobile-dock-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 .bagu-mobile-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  min-height: 2rem;
-  padding: 0.45rem 0.7rem;
   border: 1px solid var(--border-color);
   border-radius: 999px;
-  background: var(--bg-panel);
-  color: var(--text-main);
+  background: white;
+  padding: 0.42rem 0.7rem;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--text-main);
   box-shadow: var(--shadow-card);
 }
-.bagu-mobile-chip span { white-space: nowrap; }
 .bagu-mobile-progress-container {
-  margin-top: 0.8rem;
-  height: 6px;
+  margin-top: 0.7rem;
+  height: 5px;
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.05);
+  background: rgba(15, 23, 42, 0.06);
   overflow: hidden;
-  transition: height 0.25s ease, opacity 0.25s ease, margin 0.25s ease;
+  transition: max-height 0.2s ease, opacity 0.2s ease, margin-top 0.2s ease;
 }
-.bagu-mobile-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #818cf8, #7c3aed); }
-.bagu-mobile-dock.bagu-progress-collapsed .bagu-mobile-progress-container { height: 0; opacity: 0; margin-top: 0.15rem; }
+.bagu-mobile-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #818cf8, #7c3aed);
+}
+.bagu-mobile-dock.bagu-progress-collapsed .bagu-mobile-progress-container {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+}
 
 .bagu-deck-overlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 160;
+  background: rgba(15, 23, 42, 0.48);
   display: none;
   align-items: center;
   justify-content: center;
-  padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
-  background: rgba(15, 23, 42, 0.58);
+  padding: 1rem;
 }
-.bagu-deck-overlay[data-open="1"] { display: flex; }
+.bagu-deck-overlay.is-open {
+  display: flex;
+}
 .bagu-deck-dialog {
-  width: min(100%, 34rem);
-  max-height: 100%;
+  width: min(720px, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+  border-radius: 24px;
+  background: rgba(255, 252, 246, 0.98);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--border-color);
-  border-radius: 24px;
-  background: rgba(248, 250, 252, 0.98);
-  box-shadow: 0 30px 60px -28px rgba(15, 23, 42, 0.65);
 }
-.bagu-deck-topbar { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
-.bagu-deck-heading { min-width: 0; flex: 1; text-align: center; }
-.bagu-deck-heading span { display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.2rem; }
-.bagu-deck-heading strong { display: block; color: var(--text-main); font-size: 1rem; }
-.bagu-deck-icon,
-.bagu-deck-nav-btn {
+.bagu-deck-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.85rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.bagu-deck-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+}
+.bagu-deck-heading span {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.bagu-deck-heading strong {
+  font-size: 0.92rem;
+  color: var(--text-main);
+}
+.bagu-deck-stage {
+  padding: 1rem;
+  overflow: auto;
+  max-height: 70vh;
+}
+.bagu-deck-card {
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.bagu-deck-card-question {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1.2rem 1.25rem;
+}
+.bagu-deck-card-question::before {
+  content: "Q";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  min-width: 1.9rem;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--md-accent-fg-color);
+  font-weight: 800;
+}
+.bagu-deck-card-question h3 {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 1.05rem !important;
+  line-height: 1.55;
+  color: var(--text-main);
+  border: none !important;
+  background: none !important;
+}
+.bagu-deck-card-answer {
+  border-top: 1px dashed rgba(15, 23, 42, 0.08);
+  padding: 1.1rem 1.25rem 1.25rem;
+  background: #f8fafc;
+  color: #475569;
+  line-height: 1.75;
+}
+.bagu-deck-card-answer[hidden] {
+  display: none !important;
+}
+.bagu-deck-card-answer > :first-child {
+  margin-top: 0;
+}
+.bagu-deck-card-answer > :last-child {
+  margin-bottom: 0;
+}
+.bagu-deck-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.95rem 1rem 1rem;
+  border-top: 1px solid var(--border-color);
+}
+.bagu-deck-nav-btn,
+.bagu-deck-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  min-height: 2.35rem;
-  padding: 0.55rem 0.8rem;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  background: var(--bg-panel);
+  background: white;
   color: var(--text-main);
+  border-radius: 12px;
+  cursor: pointer;
   box-shadow: var(--shadow-card);
+  transition: 0.18s ease;
 }
-.bagu-deck-icon { min-width: 2.35rem; padding: 0.55rem; }
-.bagu-deck-answer { min-width: auto; }
-.bagu-deck-icon span,
-.bagu-deck-nav-btn span { white-space: nowrap; }
-.bagu-deck-stage { min-height: 0; max-height: min(70vh, 40rem); overflow: auto; padding-right: 0.15rem; }
-.bagu-deck-card {
-  padding: 1.35rem;
-  border: 1px solid rgba(99, 102, 241, 0.15);
-  border-radius: 20px;
-  background: linear-gradient(180deg, rgba(99, 102, 241, 0.08), rgba(255, 255, 255, 0));
+.bagu-deck-nav-btn {
+  padding: 0.6rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 600;
 }
-.bagu-deck-card-kicker { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--md-accent-fg-color); margin-bottom: 0.9rem; }
-.bagu-deck-card h3 { margin: 0 0 1rem !important; font-size: 1.15rem !important; line-height: 1.55; color: var(--text-main); }
-.bagu-deck-card-answer { display: none; padding-top: 1rem; border-top: 1px dashed rgba(15, 23, 42, 0.12); line-height: 1.85; color: #475569; }
-.bagu-deck-card-answer.is-visible { display: block; }
-.bagu-deck-nav { display: flex; justify-content: space-between; gap: 0.75rem; }
-.bagu-deck-nav-btn[disabled] { opacity: 0.45; pointer-events: none; }
-body.bagu-deck-open { overflow: hidden; }
-
-/* =========================================
-   移动端响应式优化
-========================================= */
-@media screen and (max-width: 768px) {
-  body.bagu-mobile-dock-active .md-content__inner { padding-bottom: 6.8rem !important; }
-  .bagu-mobile-only { display: inline-flex !important; }
-  .hero-shell {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    padding: 2rem 0 3rem;
-  }
-  .hero-copy h1 { font-size: 1.5rem !important; }
-  .hero-panel { display: none; }
-
-  .card-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-
-  .bagu-flashcard { border-radius: 12px; margin: 0.8rem 0; }
-  .bagu-flashcard-title { padding: 1rem 1.2rem; }
-  .bagu-flashcard-content { padding: 1.2rem 1.2rem 1.2rem 1.2rem; }
-  .bagu-flashcard-title::before { width: 1.5rem; height: 1.5rem; min-width: 1.5rem; font-size: 0.85rem; margin-right: 0.75rem; }
-
-  .md-typeset h1 { font-size: 1.8rem; }
-  .md-typeset h2 { font-size: 1.2rem; margin-top: 2.5rem; padding: 0.4rem 0 0.4rem 0.75rem; }
-
-  .bagu-toolbar { top: 4rem; padding: 0.75rem 0; margin-bottom: 1.5rem; align-items: stretch; }
-  .bagu-toolbar-main { flex-direction: column; align-items: stretch; gap: 0.75rem; }
-  .bagu-current-section { max-width: none; }
-  .bagu-progress-shell { width: 100%; }
-  .bagu-toolbar-actions { width: 100%; justify-content: space-between; }
-  .bagu-tool-btn { flex: 1 1 calc(50% - 0.4rem); justify-content: center; }
+.bagu-deck-icon {
+  width: 2.5rem;
+  height: 2.5rem;
 }
-
-@media screen and (max-width: 480px) {
-  .card-grid { grid-template-columns: 1fr; }
-  .hero-actions { flex-direction: column; }
-  .hero-btn { justify-content: center; text-align: center; }
-  .bagu-mobile-dock-main { flex-direction: column; }
-  .bagu-mobile-dock-actions { width: 100%; justify-content: stretch; }
-  .bagu-mobile-chip { flex: 1 1 calc(50% - 0.25rem); justify-content: center; }
-  .bagu-deck-dialog { padding: 0.85rem; border-radius: 20px; }
-  .bagu-deck-card { padding: 1.1rem; }
-
-  .bagu-flashcard-title::before { display: none; }
-  .bagu-flashcard-title { padding: 0.9rem 1rem; }
-  .bagu-flashcard-content { padding: 0.9rem 1rem 1rem 1rem; }
-}
-
-/* =========================================
-   UI polish (non-functional)
-========================================= */
-:root {
-  --radius-card: 16px;
-  --radius-md: 12px;
-  --radius-sm: 10px;
-  --focus-ring-color: rgba(162, 74, 45, 0.35);
-}
-
-.md-typeset {
-  line-height: 1.75;
-}
-
-[data-md-color-scheme="default"] .md-typeset h2 {
+.bagu-deck-nav-btn:hover,
+.bagu-deck-icon:hover {
+  border-color: var(--border-hover);
   background: var(--accent-soft);
 }
-
-[data-md-color-scheme="default"] .md-typeset code {
-  background: rgba(15, 23, 42, 0.06);
+.bagu-deck-nav-btn[disabled],
+.bagu-deck-icon[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.bagu-flashcard,
-.stat-card,
-.note-card,
-.bagu-intro-card,
-.bagu-deck-card {
-  border-radius: var(--radius-card);
+/* deck 中克隆内容的兼容修正 */
+.bagu-deck-card-answer pre {
+  overflow: auto;
+}
+.bagu-deck-card-answer table {
+  display: block;
+  overflow-x: auto;
+}
+.bagu-deck-card-answer img {
+  max-width: 100%;
+  height: auto;
 }
 
-.bagu-tool-btn,
-.bagu-collapse-btn,
-.bagu-nav-search,
-.hero-btn,
-.bagu-mobile-chip,
-.bagu-deck-icon,
-.bagu-deck-nav-btn {
-  border-radius: var(--radius-md);
-}
-
-.bagu-tool-btn:focus-visible,
-.bagu-collapse-btn:focus-visible,
-.bagu-nav-search:focus-visible,
-.hero-btn:focus-visible,
-.bagu-mobile-chip:focus-visible,
-.bagu-deck-icon:focus-visible,
-.bagu-deck-nav-btn:focus-visible,
-.bagu-toc-toggle:focus-visible,
-.md-nav__link:focus-visible,
-.md-typeset a:focus-visible {
-  outline: 3px solid var(--focus-ring-color);
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bagu-flashcard,
-  .note-card,
-  .stat-card,
-  .hero-btn,
-  .bagu-tool-btn,
-  .bagu-deck-card,
-  .bagu-mobile-dock {
-    transition: none !important;
-    animation: none !important;
+/* =========================================
+   响应式
+========================================= */
+@media screen and (max-width: 76.2344em) {
+  .hero-shell {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding-top: 2rem;
   }
+}
+
+@media screen and (max-width: 56em) {
+  .md-main__inner {
+    margin-top: 0.6rem;
+  }
+
+  .md-content__inner {
+    padding: 0 0.2rem 5.8rem 0.2rem !important;
+  }
+
+  .bagu-toolbar {
+    top: 3.5rem;
+    padding: 0.8rem 0;
+    gap: 0.75rem;
+  }
+
+  .bagu-toolbar-main {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .bagu-progress-shell {
+    width: 100%;
+  }
+
+  .bagu-toolbar-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .bagu-mobile-only {
+    display: inline-flex !important;
+  }
+
+  .hero-shell {
+    padding: 1.6rem 0 2.4rem;
+  }
+
+  .hero-copy h1 {
+    font-size: 1.45rem !important;
+  }
+
+  .hero-actions {
+    width: 100%;
+  }
+
+  .hero-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .bagu-flashcard-title,
+  .bagu-flashcard-content {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .bagu-flashcard-content {
+    padding-top: 1rem;
+    padding-bottom: 1.1rem;
+  }
+
+  .bagu-flashcard-title::before {
+    margin-right: 0.8rem;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bagu-deck-dialog {
+    width: 100%;
+    max-height: calc(100vh - 1rem);
+    border-radius: 18px;
+  }
+
+  .bagu-deck-stage {
+    max-height: calc(100vh - 11rem);
+  }
+
+  .bagu-deck-nav {
+    flex-wrap: wrap;
+  }
+
+  .bagu-deck-nav-btn {
+    flex: 1 1 calc(50% - 0.4rem);
+    justify-content: center;
+  }
+}
+
+/* =========================================
+   首页 / 学习页辅助类
+========================================= */
+body.bagu-home-hero .bagu-toolbar,
+body.bagu-home-hero .bagu-mobile-dock {
+  display: none !important;
+}
+
+.bagu-toc-empty::before {
+  content: "· ";
+}
+
+.bagu-sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
 }
