@@ -62,7 +62,7 @@
   }
 
   function getDesktop() {
-    return window.matchMedia("(min-width: 992px)").matches;
+    return window.matchMedia("(min-width: 56em)").matches;
   }
 
   function getMobile() {
