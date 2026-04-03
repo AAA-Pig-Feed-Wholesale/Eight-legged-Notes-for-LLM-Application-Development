@@ -5,7 +5,9 @@
     leftCollapsed: "bagu_mkdocs_left_collapsed",
     rightCollapsed: "bagu_mkdocs_right_collapsed",
     tocCollapsed: "bagu_mkdocs_toc_collapsed",
-    progressCollapsed: "bagu_mkdocs_progress_collapsed"
+    progressCollapsed: "bagu_mkdocs_progress_collapsed",
+    tocCompact: "bagu_mkdocs_toc_compact",
+    navFocus: "bagu_mkdocs_nav_focus"
   };
 
   const DEFAULTS = {
@@ -54,11 +56,144 @@
     };
   }
 
+  function ensureSecondaryToc(root, nav) {
+    if (!nav || nav.querySelector(".md-nav__item")) {
+      return !!(nav && nav.querySelector(".md-nav__item"));
+    }
+
+    const contentInner = root.querySelector(".md-content__inner");
+    if (!contentInner) {
+      return false;
+    }
+
+    const headings = Array.from(contentInner.querySelectorAll("h2, h3"))
+      .filter((heading) => heading.id && normalizeText(heading.textContent));
+
+    if (!headings.length) {
+      return false;
+    }
+
+    let list = nav.querySelector(".md-nav__list");
+    if (!list) {
+      list = document.createElement("ul");
+      list.className = "md-nav__list";
+      list.setAttribute("data-md-component", "toc");
+      list.setAttribute("data-md-scrollfix", "");
+      nav.appendChild(list);
+    }
+
+    if (!nav.querySelector(".md-nav__title")) {
+      const label = document.createElement("label");
+      label.className = "md-nav__title";
+      label.setAttribute("for", "__toc");
+      label.innerHTML = '<span class="md-nav__icon md-icon"></span>目录';
+      nav.insertBefore(label, list);
+    }
+
+    let currentSublist = null;
+    headings.forEach((heading) => {
+      const isH2 = heading.tagName === "H2";
+      const item = document.createElement("li");
+      item.className = "md-nav__item";
+
+      const link = document.createElement("a");
+      link.className = "md-nav__link";
+      link.href = `#${heading.id}`;
+
+      const label = document.createElement("span");
+      label.className = "md-ellipsis";
+      label.textContent = normalizeText(heading.textContent);
+      link.appendChild(label);
+      item.appendChild(link);
+
+      if (isH2) {
+        list.appendChild(item);
+        currentSublist = null;
+      } else if (currentSublist) {
+        currentSublist.appendChild(item);
+      } else {
+        list.appendChild(item);
+      }
+
+      if (isH2) {
+        const subNav = document.createElement("nav");
+        subNav.className = "md-nav";
+        subNav.setAttribute("aria-label", label.textContent);
+
+        const subList = document.createElement("ul");
+        subList.className = "md-nav__list";
+
+        subNav.appendChild(subList);
+        item.appendChild(subNav);
+        currentSublist = subList;
+      }
+    });
+
+    return true;
+  }
+
   function getRightContext(root) {
     const secondary = root.querySelector(".md-sidebar--secondary");
     const toc = secondary ? secondary.querySelector(".md-nav--secondary") : null;
-    const enabled = !!(toc && toc.querySelector(".md-nav__item"));
+    const enabled = !!(toc && ensureSecondaryToc(root, toc));
     return { secondary, enabled };
+  }
+
+  function applyNavFocus(root, enabled) {
+    document.body.classList.toggle("bagu-nav-focus", enabled);
+  }
+
+  function ensureNavFocusToggle(root) {
+    const primary = root.querySelector(".md-sidebar--primary");
+    if (!primary) {
+      return;
+    }
+
+    const inner = primary.querySelector(".md-sidebar__inner");
+    if (!inner || inner.querySelector(".bagu-nav-focus-toggle")) {
+      return;
+    }
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "bagu-nav-focus-toggle";
+
+    const state = root.__baguNavState || {
+      focusOnly: loadFlagWithDefault(STORAGE.navFocus, false)
+    };
+    root.__baguNavState = state;
+    applyNavFocus(root, state.focusOnly);
+
+    const updateLabel = () => {
+      button.textContent = state.focusOnly ? "展开全部导航" : "仅看当前章节";
+    };
+
+    updateLabel();
+    button.addEventListener("click", () => {
+      state.focusOnly = !state.focusOnly;
+      saveFlag(STORAGE.navFocus, state.focusOnly);
+      applyNavFocus(root, state.focusOnly);
+      updateLabel();
+    });
+
+    inner.insertBefore(button, inner.firstChild);
+  }
+
+  function suppressSearchInitMessage(root) {
+    const meta = root.querySelector(".md-search-result__meta");
+    if (!meta || meta.__baguSearchObserver) {
+      return;
+    }
+
+    const update = () => {
+      const text = normalizeText(meta.textContent);
+      meta.classList.toggle("bagu-search-init", text.includes("正在初始化搜索引擎"));
+    };
+
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(meta, { characterData: true, childList: true, subtree: true });
+    meta.__baguSearchObserver = observer;
   }
 
   function getPageKey() {
@@ -86,12 +221,27 @@
     localStorage.setItem(key, value ? "1" : "0");
   }
 
+  function loadFlagWithDefault(key, fallback) {
+    const raw = localStorage.getItem(key);
+    if (raw === null) {
+      return fallback;
+    }
+    return raw === "1";
+  }
+
   function getScrollTop() {
     return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
   }
 
   function normalizeText(text) {
     return (text || "").replace(/\s+/g, " ").trim();
+  }
+
+  function escapeSelector(value) {
+    if (window.CSS && typeof window.CSS.escape === "function") {
+      return window.CSS.escape(value);
+    }
+    return String(value).replace(/"/g, '\\"');
   }
 
   function icon(name) {
@@ -183,7 +333,7 @@
 
     function onMove(event) {
       const delta = event.clientX - startX;
-      const nextWidth = clamp(startWidth + delta, bounds.min, bounds.max);
+      const nextWidth = clamp(side === "left" ? startWidth + delta : startWidth - delta, bounds.min, bounds.max);
 
       if (side === "left") {
         state.leftWidth = nextWidth;
@@ -308,11 +458,89 @@
     applyLayoutState(root);
   }
 
+  function ensureTocControls(root, nav) {
+    if (!nav) {
+      return;
+    }
+
+    const state = root.__baguTocState || {
+      compact: loadFlagWithDefault(STORAGE.tocCompact, true)
+    };
+    root.__baguTocState = state;
+    document.body.classList.toggle("bagu-toc-compact", state.compact);
+
+    let controls = nav.querySelector(".bagu-toc-controls");
+    if (!controls) {
+      controls = document.createElement("div");
+      controls.className = "bagu-toc-controls";
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "bagu-toc-mode";
+      controls.appendChild(button);
+      nav.insertBefore(controls, nav.firstChild);
+
+      button.addEventListener("click", () => {
+        state.compact = !state.compact;
+        saveFlag(STORAGE.tocCompact, state.compact);
+        document.body.classList.toggle("bagu-toc-compact", state.compact);
+        syncTocCurrent(root);
+        updateTocControlLabel(root);
+      });
+    }
+
+    updateTocControlLabel(root);
+  }
+
+  function updateTocControlLabel(root) {
+    const state = root.__baguTocState;
+    const nav = root.querySelector(".md-sidebar--secondary .md-nav--secondary");
+    if (!state || !nav) {
+      return;
+    }
+
+    const button = nav.querySelector(".bagu-toc-mode");
+    if (button) {
+      button.textContent = state.compact ? "展开全部目录" : "仅看当前章节";
+    }
+  }
+
+  function syncTocCurrent(root) {
+    const nav = root.querySelector(".md-sidebar--secondary .md-nav--secondary");
+    if (!nav) {
+      return;
+    }
+
+    const currentId = root.__baguEducationState?.currentHeadingId || (location.hash ? location.hash.slice(1) : "");
+    const topItems = Array.from(nav.querySelectorAll(":scope > .md-nav__list > .bagu-toc-item"));
+    topItems.forEach((item) => item.classList.remove("bagu-toc-current"));
+
+    if (!currentId) {
+      return;
+    }
+
+    const link = nav.querySelector(`a.md-nav__link[href="#${escapeSelector(currentId)}"]`);
+    if (!link) {
+      return;
+    }
+
+    const topItem = topItems.find((item) => item.contains(link));
+    if (topItem) {
+      topItem.classList.add("bagu-toc-current");
+    }
+  }
+
   function buildTocTree(root) {
     const nav = root.querySelector(".md-sidebar--secondary .md-nav--secondary");
     if (!nav || nav.dataset.baguTocReady === "1") {
       return;
     }
+
+    if (!ensureSecondaryToc(root, nav)) {
+      return;
+    }
+
+    ensureTocControls(root, nav);
 
     const collapsedState = loadJSON(STORAGE.tocCollapsed, {});
     const pageKey = getPageKey();
@@ -365,6 +593,7 @@
     });
 
     nav.dataset.baguTocReady = "1";
+    syncTocCurrent(root);
   }
 
   function buildFlashcards(contentInner) {
@@ -418,9 +647,28 @@
     return Array.from(contentInner.querySelectorAll("h2, .bagu-h3-anchor"))
       .map((element) => ({
         element,
-        label: normalizeText(element.textContent)
+        label: normalizeText(element.textContent),
+        id: element.id
       }))
       .filter((item) => item.label);
+  }
+
+  function resolveCurrentHeading(headings) {
+    if (!headings.length) {
+      return null;
+    }
+
+    const threshold = getScrollTop() + (getMobile() ? 120 : 150);
+    let current = headings[0];
+
+    headings.forEach((item) => {
+      const top = getScrollTop() + item.element.getBoundingClientRect().top;
+      if (top <= threshold) {
+        current = item;
+      }
+    });
+
+    return current;
   }
 
   function buildToolbar(cardCount) {
@@ -606,17 +854,8 @@
       return LABELS.currentSectionFallback;
     }
 
-    const threshold = getScrollTop() + (getMobile() ? 120 : 150);
-    let current = headings[0].label;
-
-    headings.forEach((item) => {
-      const top = getScrollTop() + item.element.getBoundingClientRect().top;
-      if (top <= threshold) {
-        current = item.label;
-      }
-    });
-
-    return current;
+    const current = resolveCurrentHeading(headings);
+    return current ? current.label : LABELS.currentSectionFallback;
   }
 
   function updateReadingState(root) {
@@ -632,8 +871,10 @@
     const maxScroll = documentElement.scrollHeight - documentElement.clientHeight;
     const progress = maxScroll > 0 ? Math.min(100, Math.max(0, (getScrollTop() / maxScroll) * 100)) : 0;
     const progressText = `${Math.round(progress)}%`;
-    const currentSection = resolveCurrentSection(state.headings);
+    const currentHeading = resolveCurrentHeading(state.headings);
+    const currentSection = currentHeading ? currentHeading.label : LABELS.currentSectionFallback;
 
+    state.currentHeadingId = currentHeading ? currentHeading.id : "";
     state.progressBar.style.width = `${progress}%`;
     state.progressValue.textContent = progressText;
     state.currentSection.textContent = currentSection;
@@ -643,6 +884,7 @@
     ui.mobileSection.textContent = currentSection;
 
     syncMobileDock(root);
+    syncTocCurrent(root);
   }
 
   function requestReadingUpdate(root) {
@@ -852,6 +1094,7 @@
     window.addEventListener("hashchange", () => {
       revealHashTarget(root);
       requestReadingUpdate(root);
+      syncTocCurrent(root);
     });
 
     window.addEventListener("keydown", (event) => {
@@ -877,6 +1120,8 @@
     document.body.classList.toggle("bagu-home-hero", !!root.querySelector(".hero-shell"));
 
     ensureGlobalUi(root);
+    ensureNavFocusToggle(root);
+    suppressSearchInitMessage(root);
     ensureLayoutControls(root);
     buildTocTree(root);
     bindGlobalListeners(root);

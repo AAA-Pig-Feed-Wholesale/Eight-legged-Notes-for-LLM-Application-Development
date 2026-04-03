@@ -256,6 +256,54 @@ body {
   text-transform: uppercase;
   color: var(--text-muted);
 }
+.bagu-toc-controls {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0.45rem 0.55rem;
+}
+.bagu-toc-mode {
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.bagu-toc-mode:hover {
+  color: var(--md-accent-fg-color);
+  border-color: var(--border-hover);
+}
+
+body.bagu-toc-compact .bagu-toc-item > .md-nav {
+  display: none;
+}
+body.bagu-toc-compact .bagu-toc-item.bagu-toc-current > .md-nav {
+  display: block;
+}
+
+.bagu-nav-focus-toggle {
+  width: 100%;
+  margin: 0.6rem 0.5rem 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.bagu-nav-focus-toggle:hover {
+  color: var(--md-accent-fg-color);
+  border-color: var(--border-hover);
+}
+body.bagu-nav-focus .md-sidebar--primary .md-nav__item--section:not(.md-nav__item--active) {
+  display: none;
+}
 .bagu-toc-item > .md-nav { margin-left: 0.8rem; padding-left: 0.5rem; border-left: 2px solid rgba(15, 23, 42, 0.05); }
 .bagu-toc-item.bagu-collapsed > .md-nav { display: none; }
 .bagu-toc-item { margin: 0.1rem 0; }
@@ -429,6 +477,20 @@ body.bagu-home-hero .md-content__inner > h1:first-of-type { display: none; }
   gap: 0.75rem;
   flex-wrap: wrap;
 }
+.hero-actions .hero-btn.ghost {
+  background: transparent;
+  border-style: dashed;
+  color: var(--text-muted) !important;
+}
+.hero-actions .hero-btn.ghost:hover {
+  color: var(--md-accent-fg-color) !important;
+  border-color: var(--md-accent-fg-color);
+}
+.hero-search-hint {
+  margin-top: 0.65rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
 
 .hero-btn {
   display: inline-flex;
@@ -492,6 +554,56 @@ body.bagu-home-hero .md-content__inner > h1:first-of-type { display: none; }
   font-size: 0.92rem;
   color: var(--text-main);
   font-weight: 600;
+}
+
+.bagu-intro-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin: 1.2rem 0 1.6rem;
+}
+.bagu-intro-card {
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 1rem 1.15rem;
+  background: var(--bg-panel);
+  box-shadow: var(--shadow-card);
+}
+.bagu-intro-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+.bagu-intro-card strong {
+  color: var(--text-main);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.bagu-intro-more {
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 0.2rem 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow-card);
+  margin-bottom: 2rem;
+}
+.bagu-intro-more summary {
+  cursor: pointer;
+  padding: 0.75rem 0;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.bagu-intro-more p {
+  margin: 0 0 0.9rem;
+  color: var(--text-muted);
+}
+
+.md-search-result__meta.bagu-search-init {
+  display: none;
 }
 
 /* =========================================
