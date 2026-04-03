@@ -11,8 +11,8 @@
   };
 
   const DEFAULTS = {
-    leftWidth: 248,
-    rightWidth: 272
+    leftWidth: 300,
+    rightWidth: 280
   };
 
   const LABELS = {
@@ -45,14 +45,14 @@
   function getBounds(side) {
     if (side === "left") {
       return {
-        min: 208,
-        max: Math.min(380, Math.floor(window.innerWidth * 0.3))
+        min: 220,
+        max: Math.min(520, Math.floor(window.innerWidth * 0.42))
       };
     }
 
     return {
-      min: 208,
-      max: Math.min(400, Math.floor(window.innerWidth * 0.34))
+      min: 220,
+      max: Math.min(460, Math.floor(window.innerWidth * 0.36))
     };
   }
 

@@ -121,7 +121,13 @@ body {
 /* =========================================
    基础布局与响应式侧边栏
 ========================================= */
-:root { --bagu-left-width: 16rem; --bagu-right-width: 20rem; --bagu-handle-width: 16px; }
+:root {
+  --bagu-left-width: 300px;
+  --bagu-right-width: 280px;
+  --bagu-left-collapsed-width: 74px;
+  --bagu-right-collapsed-width: 74px;
+  --bagu-handle-width: 12px;
+}
 
 .md-header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); }
 .md-main__inner { margin-top: 1.5rem; transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -213,8 +219,8 @@ body {
   .bagu-toggle-left { right: 0.5rem; }
   .bagu-toggle-right { left: 0.5rem; }
 
-  body.bagu-left-collapsed { --bagu-left-width: 3.5rem; }
-  body.bagu-right-collapsed { --bagu-right-width: 3.5rem; }
+  body.bagu-left-collapsed { --bagu-left-width: var(--bagu-left-collapsed-width); }
+  body.bagu-right-collapsed { --bagu-right-width: var(--bagu-right-collapsed-width); }
 
   body.bagu-left-collapsed .md-sidebar--primary .md-sidebar__scrollwrap,
   body.bagu-right-collapsed .md-sidebar--secondary .md-sidebar__scrollwrap,
@@ -255,6 +261,18 @@ body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
+}
+
+@media screen and (min-width: 62em) {
+  .md-sidebar--secondary .md-sidebar__scrollwrap {
+    padding-right: 0;
+    padding-left: 0.5rem;
+  }
+
+  .md-sidebar--secondary .md-nav--secondary {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
 }
 .bagu-toc-controls {
   display: flex;
