@@ -66,8 +66,13 @@
       return false;
     }
 
-    const headings = Array.from(contentInner.querySelectorAll("h2, h3"))
-      .filter((heading) => heading.id && normalizeText(heading.textContent));
+    const headings = Array.from(contentInner.querySelectorAll("h2, h3, h4, h5, h6"))
+      .map((heading) => ({
+        element: heading,
+        level: Number(heading.tagName.slice(1)),
+        label: normalizeText(heading.textContent)
+      }))
+      .filter((heading) => heading.element.id && heading.label && heading.level >= 2 && heading.level <= 6);
 
     if (!headings.length) {
       return false;
@@ -90,42 +95,40 @@
       nav.insertBefore(label, list);
     }
 
-    let currentSublist = null;
-    headings.forEach((heading) => {
-      const isH2 = heading.tagName === "H2";
+    const stack = [{ level: 1, list }];
+
+    headings.forEach((heading, index) => {
+      while (stack.length && heading.level <= stack[stack.length - 1].level) {
+        stack.pop();
+      }
+
+      const parent = stack[stack.length - 1] || stack[0];
       const item = document.createElement("li");
       item.className = "md-nav__item";
 
       const link = document.createElement("a");
       link.className = "md-nav__link";
-      link.href = `#${heading.id}`;
+      link.href = `#${heading.element.id}`;
 
       const label = document.createElement("span");
       label.className = "md-ellipsis";
-      label.textContent = normalizeText(heading.textContent);
+      label.textContent = heading.label;
       link.appendChild(label);
       item.appendChild(link);
+      parent.list.appendChild(item);
 
-      if (isH2) {
-        list.appendChild(item);
-        currentSublist = null;
-      } else if (currentSublist) {
-        currentSublist.appendChild(item);
-      } else {
-        list.appendChild(item);
-      }
-
-      if (isH2) {
+      const nextHeading = headings[index + 1];
+      if (nextHeading && nextHeading.level > heading.level) {
         const subNav = document.createElement("nav");
         subNav.className = "md-nav";
-        subNav.setAttribute("aria-label", label.textContent);
+        subNav.setAttribute("aria-label", heading.label);
 
         const subList = document.createElement("ul");
         subList.className = "md-nav__list";
 
         subNav.appendChild(subList);
         item.appendChild(subNav);
-        currentSublist = subList;
+        stack.push({ level: heading.level, list: subList });
       }
     });
 
@@ -137,6 +140,104 @@
     const toc = secondary ? secondary.querySelector(".md-nav--secondary") : null;
     const enabled = !!(toc && ensureSecondaryToc(root, toc));
     return { secondary, enabled };
+  }
+
+  function ensureSidebarChrome(root) {
+    if (!getDesktop()) {
+      return;
+    }
+
+    const primary = root.querySelector(".md-sidebar--primary");
+    const secondary = root.querySelector(".md-sidebar--secondary");
+
+    if (primary && root.__baguLayoutState?.leftToggle) {
+      setupSidebar(root, primary, "导航", root.__baguLayoutState.leftToggle, true);
+    }
+
+    if (secondary && root.__baguLayoutState?.rightToggle) {
+      setupSidebar(root, secondary, "目录", root.__baguLayoutState.rightToggle, false);
+    }
+  }
+
+  function setupSidebar(root, sidebar, label, toggleButton, withSearch) {
+    const inner = sidebar.querySelector(".md-sidebar__inner");
+    if (!inner) {
+      return;
+    }
+
+    let header = inner.querySelector(".bagu-sidebar-top");
+    if (!header) {
+      header = document.createElement("div");
+      header.className = "bagu-sidebar-top";
+
+      const title = document.createElement("p");
+      title.className = "bagu-sidebar-label";
+      title.textContent = label;
+
+      header.appendChild(title);
+      inner.insertBefore(header, inner.firstChild);
+    }
+
+    toggleButton.classList.add("bagu-collapse-btn");
+    toggleButton.removeAttribute("style");
+    if (toggleButton.parentElement !== header) {
+      header.appendChild(toggleButton);
+    }
+
+    if (withSearch) {
+      let search = inner.querySelector(".bagu-nav-search");
+      if (!search) {
+        search = document.createElement("input");
+        search.className = "bagu-nav-search";
+        search.type = "search";
+        search.placeholder = "搜索目录";
+        header.insertAdjacentElement("afterend", search);
+
+        search.addEventListener("input", () => {
+          filterPrimaryNav(root, search.value);
+        });
+      }
+    } else {
+      const nav = sidebar.querySelector(".md-nav--secondary");
+      if (nav && !nav.querySelector(".bagu-toc-title")) {
+        const title = document.createElement("h3");
+        title.className = "bagu-toc-title";
+        title.textContent = "二级目录";
+
+        const controls = nav.querySelector(".bagu-toc-controls");
+        if (controls && controls.nextSibling) {
+          nav.insertBefore(title, controls.nextSibling);
+        } else {
+          nav.insertBefore(title, nav.firstChild);
+        }
+      }
+    }
+  }
+
+  function filterPrimaryNav(root, query) {
+    const items = Array.from(root.querySelectorAll(".md-sidebar--primary .md-nav__item"));
+    const links = Array.from(root.querySelectorAll(".md-sidebar--primary .md-nav__link"));
+    const keyword = normalizeText(query).toLowerCase();
+
+    if (!keyword) {
+      items.forEach((item) => item.classList.remove("bagu-nav-hidden"));
+      return;
+    }
+
+    items.forEach((item) => item.classList.add("bagu-nav-hidden"));
+
+    links.forEach((link) => {
+      const text = normalizeText(link.textContent).toLowerCase();
+      if (!text.includes(keyword)) {
+        return;
+      }
+
+      let item = link.closest(".md-nav__item");
+      while (item) {
+        item.classList.remove("bagu-nav-hidden");
+        item = item.parentElement ? item.parentElement.closest(".md-nav__item") : null;
+      }
+    });
   }
 
   function applyNavFocus(root, enabled) {
@@ -1120,9 +1221,9 @@
     document.body.classList.toggle("bagu-home-hero", !!root.querySelector(".hero-shell"));
 
     ensureGlobalUi(root);
-    ensureNavFocusToggle(root);
     suppressSearchInitMessage(root);
     ensureLayoutControls(root);
+    ensureSidebarChrome(root);
     buildTocTree(root);
     bindGlobalListeners(root);
     initEducationFeatures(root);
