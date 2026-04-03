@@ -121,7 +121,7 @@ body {
 /* =========================================
    基础布局与响应式侧边栏
 ========================================= */
-:root { --bagu-left-width: 16rem; --bagu-right-width: 17rem; --bagu-handle-width: 16px; }
+:root { --bagu-left-width: 16rem; --bagu-right-width: 20rem; --bagu-handle-width: 16px; }
 
 .md-header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); }
 .md-main__inner { margin-top: 1.5rem; transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
