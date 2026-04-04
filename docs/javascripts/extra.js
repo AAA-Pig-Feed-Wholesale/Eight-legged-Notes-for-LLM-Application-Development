@@ -74,6 +74,73 @@
     return Array.from(root.querySelectorAll("h2[id], h3[id], h4[id], h5[id], h6[id]"));
   }
 
+  function ensureSecondaryToc(root) {
+    const nav = root.querySelector(".md-sidebar--secondary .md-nav--secondary");
+    if (!nav) {
+      return;
+    }
+
+    if (nav.querySelector(".md-nav__item")) {
+      return;
+    }
+
+    const contentInner = root.querySelector(".md-content__inner");
+    if (!contentInner) {
+      return;
+    }
+
+    const headings = getHeadings(contentInner)
+      .map((heading) => ({
+        element: heading,
+        level: Number(heading.tagName.slice(1)),
+        label: normalizeText(heading.textContent)
+      }))
+      .filter((item) => item.element.id && item.label);
+
+    if (!headings.length) {
+      nav.innerHTML = `<div class="bagu-toc-empty">${LABELS.emptyToc}</div>`;
+      return;
+    }
+
+    let list = nav.querySelector(".md-nav__list");
+    if (!list) {
+      list = document.createElement("ul");
+      list.className = "md-nav__list";
+      nav.appendChild(list);
+    } else {
+      list.innerHTML = "";
+    }
+
+    const stack = [{ level: 1, list }];
+    headings.forEach((heading, index) => {
+      while (stack.length && heading.level <= stack[stack.length - 1].level) {
+        stack.pop();
+      }
+
+      const parent = stack[stack.length - 1] || stack[0];
+      const item = document.createElement("li");
+      item.className = "md-nav__item";
+
+      const link = document.createElement("a");
+      link.className = "md-nav__link";
+      link.href = `#${heading.element.id}`;
+      link.textContent = heading.label;
+      item.appendChild(link);
+      parent.list.appendChild(item);
+
+      const nextHeading = headings[index + 1];
+      if (nextHeading && nextHeading.level > heading.level) {
+        const subNav = document.createElement("nav");
+        subNav.className = "md-nav";
+        const subList = document.createElement("ul");
+        subList.className = "md-nav__list";
+        subNav.appendChild(subList);
+        item.appendChild(subNav);
+        stack.push({ level: heading.level, list: subList });
+      }
+    });
+  }
+
   function buildSidebarHeader(sidebar, label) {
     const inner = sidebar.querySelector(".md-sidebar__inner");
     if (!inner) {
@@ -444,6 +511,7 @@
     }
 
     initSidebars();
+    ensureSecondaryToc(document);
     ensureTocControls();
 
     buildLearningHint(root);
