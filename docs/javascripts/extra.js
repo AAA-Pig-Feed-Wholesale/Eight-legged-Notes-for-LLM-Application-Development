@@ -125,7 +125,7 @@
   function initSidebars() {
     const primary = document.querySelector(".md-sidebar--primary");
     const secondary = document.querySelector(".md-sidebar--secondary");
-    if (!primary || !secondary) {
+    if (!primary && !secondary) {
       return null;
     }
 
@@ -136,17 +136,21 @@
       rightToggle: null
     };
 
-    state.leftToggle = buildSidebarHeader(primary, LABELS.nav, () => {
-      state.leftCollapsed = !state.leftCollapsed;
-      saveFlag(STORAGE.leftCollapsed, state.leftCollapsed);
-      applySidebarState(state);
-    });
+    if (primary) {
+      state.leftToggle = buildSidebarHeader(primary, LABELS.nav, () => {
+        state.leftCollapsed = !state.leftCollapsed;
+        saveFlag(STORAGE.leftCollapsed, state.leftCollapsed);
+        applySidebarState(state);
+      });
+    }
 
-    state.rightToggle = buildSidebarHeader(secondary, LABELS.toc, () => {
-      state.rightCollapsed = !state.rightCollapsed;
-      saveFlag(STORAGE.rightCollapsed, state.rightCollapsed);
-      applySidebarState(state);
-    });
+    if (secondary) {
+      state.rightToggle = buildSidebarHeader(secondary, LABELS.toc, () => {
+        state.rightCollapsed = !state.rightCollapsed;
+        saveFlag(STORAGE.rightCollapsed, state.rightCollapsed);
+        applySidebarState(state);
+      });
+    }
 
     applySidebarState(state);
     return state;
