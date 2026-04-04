@@ -33,7 +33,6 @@
 
   --sidebar-left-width: 280px;
   --sidebar-right-width: 260px;
-  --sidebar-collapsed-width: 72px;
 
   --md-primary-fg-color: var(--color-primary);
   --md-accent-fg-color: var(--color-accent);
@@ -194,60 +193,6 @@ body {
   color: var(--color-primary);
 }
 
-.bagu-sidebar-toggle {
-  border: 1px solid var(--glass-border);
-  background: var(--glass-strong);
-  border-radius: 12px;
-  width: 34px;
-  height: 34px;
-  cursor: pointer;
-  font-size: 18px;
-  line-height: 1;
-  color: var(--color-foreground);
-  transition: background 200ms ease, border-color 200ms ease;
-}
-
-.bagu-sidebar-toggle:hover {
-  border-color: var(--glass-border-strong);
-  background: rgba(37, 99, 235, 0.1);
-}
-
-body.bagu-sidebar-left-collapsed {
-  --sidebar-left-width: var(--sidebar-collapsed-width);
-}
-
-body.bagu-sidebar-right-collapsed {
-  --sidebar-right-width: var(--sidebar-collapsed-width);
-}
-
-body.bagu-sidebar-left-collapsed .md-sidebar--primary .md-sidebar__scrollwrap,
-body.bagu-sidebar-right-collapsed .md-sidebar--secondary .md-sidebar__scrollwrap,
-body.bagu-sidebar-right-collapsed .md-sidebar--secondary .md-nav--secondary {
-  display: none !important;
-}
-
-body.bagu-sidebar-left-collapsed .md-sidebar--primary,
-body.bagu-sidebar-right-collapsed .md-sidebar--secondary {
-  padding-left: 0.4rem;
-  padding-right: 0.4rem;
-}
-
-body.bagu-sidebar-left-collapsed .bagu-sidebar-label,
-body.bagu-sidebar-right-collapsed .bagu-sidebar-label {
-  display: none;
-}
-
-body.bagu-sidebar-left-collapsed .bagu-sidebar-top,
-body.bagu-sidebar-right-collapsed .bagu-sidebar-top {
-  justify-content: center;
-}
-
-body.bagu-sidebar-left-collapsed .bagu-sidebar-toggle,
-body.bagu-sidebar-right-collapsed .bagu-sidebar-toggle {
-  width: 40px;
-  height: 40px;
-  font-size: 20px;
-}
 
 .bagu-toc-controls {
   display: flex;

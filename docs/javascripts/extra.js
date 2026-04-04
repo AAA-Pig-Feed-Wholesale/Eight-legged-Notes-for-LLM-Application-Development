@@ -1,7 +1,5 @@
 (function () {
   const STORAGE = {
-    leftCollapsed: "bagu_sidebar_left_collapsed",
-    rightCollapsed: "bagu_sidebar_right_collapsed",
     tocCompact: "bagu_toc_compact",
     sectionsCollapsed: "bagu_sections_collapsed"
   };
@@ -76,7 +74,7 @@
     return Array.from(root.querySelectorAll("h2[id], h3[id], h4[id], h5[id], h6[id]"));
   }
 
-  function buildSidebarHeader(sidebar, label, onToggle) {
+  function buildSidebarHeader(sidebar, label) {
     const inner = sidebar.querySelector(".md-sidebar__inner");
     if (!inner) {
       return null;
@@ -93,33 +91,7 @@
       inner.insertBefore(header, inner.firstChild);
     }
 
-    let toggle = header.querySelector(".bagu-sidebar-toggle");
-    if (!toggle) {
-      toggle = document.createElement("button");
-      toggle.type = "button";
-      toggle.className = "bagu-sidebar-toggle";
-      toggle.addEventListener("click", onToggle);
-      header.appendChild(toggle);
-    }
-
-    return toggle;
-  }
-
-  function applySidebarState(state) {
-    document.body.classList.toggle("bagu-sidebar-left-collapsed", !!state.leftCollapsed);
-    document.body.classList.toggle("bagu-sidebar-right-collapsed", !!state.rightCollapsed);
-
-    if (state.leftToggle) {
-      state.leftToggle.textContent = state.leftCollapsed ? ">" : "<";
-      state.leftToggle.setAttribute("aria-label", state.leftCollapsed ? "\u5c55\u5f00\u5de6\u4fa7\u680f" : "\u6536\u8d77\u5de6\u4fa7\u680f");
-      state.leftToggle.setAttribute("aria-pressed", state.leftCollapsed ? "true" : "false");
-    }
-
-    if (state.rightToggle) {
-      state.rightToggle.textContent = state.rightCollapsed ? "<" : ">";
-      state.rightToggle.setAttribute("aria-label", state.rightCollapsed ? "\u5c55\u5f00\u53f3\u4fa7\u680f" : "\u6536\u8d77\u53f3\u4fa7\u680f");
-      state.rightToggle.setAttribute("aria-pressed", state.rightCollapsed ? "true" : "false");
-    }
+    return header;
   }
 
   function initSidebars() {
@@ -129,31 +101,17 @@
       return null;
     }
 
-    const state = {
-      leftCollapsed: loadFlag(STORAGE.leftCollapsed),
-      rightCollapsed: loadFlag(STORAGE.rightCollapsed),
-      leftToggle: null,
-      rightToggle: null
-    };
+    document.body.classList.remove("bagu-sidebar-left-collapsed", "bagu-sidebar-right-collapsed");
 
     if (primary) {
-      state.leftToggle = buildSidebarHeader(primary, LABELS.nav, () => {
-        state.leftCollapsed = !state.leftCollapsed;
-        saveFlag(STORAGE.leftCollapsed, state.leftCollapsed);
-        applySidebarState(state);
-      });
+      buildSidebarHeader(primary, LABELS.nav);
     }
 
     if (secondary) {
-      state.rightToggle = buildSidebarHeader(secondary, LABELS.toc, () => {
-        state.rightCollapsed = !state.rightCollapsed;
-        saveFlag(STORAGE.rightCollapsed, state.rightCollapsed);
-        applySidebarState(state);
-      });
+      buildSidebarHeader(secondary, LABELS.toc);
     }
 
-    applySidebarState(state);
-    return state;
+    return true;
   }
 
   function ensureTocControls() {
