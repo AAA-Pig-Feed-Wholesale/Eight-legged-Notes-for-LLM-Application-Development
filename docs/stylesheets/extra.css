@@ -70,7 +70,12 @@ body {
   margin-top: 1.25rem;
 }
 
-@media screen and (min-width: 56em) {
+.md-sidebar--primary,
+.md-sidebar--secondary {
+  display: block !important;
+}
+
+@media screen and (min-width: 48em) {
   .md-container,
   .md-container__inner,
   .md-main,
@@ -82,11 +87,6 @@ body {
     padding-right: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
-  }
-
-  .md-sidebar--primary,
-  .md-sidebar--secondary {
-    display: block !important;
   }
 
   .md-main__inner {
@@ -135,7 +135,7 @@ body {
   min-width: 0;
 }
 
-@media screen and (min-width: 56em) {
+@media screen and (min-width: 48em) {
   .md-content {
     padding: 0 1rem;
     display: flex;
@@ -488,7 +488,7 @@ body.bagu-toc-compact .md-sidebar--secondary .md-nav__item.bagu-toc-current > .m
   cursor: pointer;
 }
 
-@media screen and (max-width: 56em) {
+@media screen and (max-width: 48em) {
   .md-main__inner {
     display: block;
   }
