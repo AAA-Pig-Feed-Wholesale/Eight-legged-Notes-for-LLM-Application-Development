@@ -367,21 +367,26 @@
     const openBtn = dock.querySelector(".bagu-open-toc");
     const closeBtn = overlay.querySelector(".bagu-toc-close");
     const panelBody = overlay.querySelector(".bagu-toc-panel-body");
+    let openedAt = 0;
 
     function openToc() {
       const nav = document.querySelector(".md-sidebar--secondary .md-nav--secondary");
       panelBody.innerHTML = nav ? nav.innerHTML : "<div class=\"bagu-toc-empty\">暂无目录</div>";
       overlay.dataset.open = "1";
+      openedAt = Date.now();
     }
 
     function closeToc() {
       overlay.dataset.open = "0";
     }
 
-    openBtn.addEventListener("click", openToc);
+    openBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      openToc();
+    });
     closeBtn.addEventListener("click", closeToc);
     overlay.addEventListener("click", (event) => {
-      if (event.target === overlay) {
+      if (event.target === overlay && Date.now() - openedAt > 200) {
         closeToc();
       }
     });
@@ -447,6 +452,12 @@
     const root = document.querySelector(".md-content__inner");
     if (!root) {
       return;
+    }
+
+    if (!document.body.dataset.baguInit) {
+      saveFlag(STORAGE.leftCollapsed, false);
+      saveFlag(STORAGE.rightCollapsed, false);
+      document.body.dataset.baguInit = "1";
     }
 
     ensureSidebarControls();
