@@ -33,7 +33,7 @@
 
   --sidebar-left-width: 280px;
   --sidebar-right-width: 260px;
-  --sidebar-collapsed-width: 64px;
+  --sidebar-collapsed-width: 72px;
 
   --md-primary-fg-color: var(--color-primary);
   --md-accent-fg-color: var(--color-accent);
@@ -116,6 +116,13 @@ body {
 .md-sidebar--primary,
 .md-sidebar--secondary {
   box-shadow: var(--shadow-sm);
+}
+
+.md-sidebar__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
 }
 
 .md-sidebar--primary,
@@ -214,6 +221,23 @@ body.bagu-sidebar-right-collapsed .md-sidebar--secondary {
   padding-right: 0.4rem;
 }
 
+body.bagu-sidebar-left-collapsed .bagu-sidebar-label,
+body.bagu-sidebar-right-collapsed .bagu-sidebar-label {
+  display: none;
+}
+
+body.bagu-sidebar-left-collapsed .bagu-sidebar-top,
+body.bagu-sidebar-right-collapsed .bagu-sidebar-top {
+  justify-content: center;
+}
+
+body.bagu-sidebar-left-collapsed .bagu-sidebar-toggle,
+body.bagu-sidebar-right-collapsed .bagu-sidebar-toggle {
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+}
+
 .bagu-toc-controls {
   display: flex;
   justify-content: flex-end;
@@ -274,7 +298,7 @@ body.bagu-toc-compact .md-sidebar--secondary .md-nav__item.bagu-toc-current > .m
 .md-typeset h3,
 .md-typeset h4 {
   font-family: "Inter", "Noto Sans SC", sans-serif;
-  color: var(--color-foreground);
+  color: #0f172a;
 }
 
 .md-typeset h1 {
@@ -284,7 +308,7 @@ body.bagu-toc-compact .md-sidebar--secondary .md-nav__item.bagu-toc-current > .m
 
 .md-typeset h2 {
   border-left: 4px solid var(--color-primary);
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(37, 99, 235, 0.14);
   padding: 0.5rem 0 0.5rem 0.9rem;
   border-radius: 0 8px 8px 0;
 }
@@ -600,6 +624,13 @@ body.bagu-toc-compact .md-sidebar--secondary .md-nav__item.bagu-toc-current > .m
     radial-gradient(1200px circle at 10% -10%, rgba(59, 130, 246, 0.2), transparent 46%),
     radial-gradient(900px circle at 90% 0%, rgba(249, 115, 22, 0.18), transparent 48%),
     linear-gradient(180deg, #0f172a 0%, #111827 100%);
+}
+
+[data-md-color-scheme="slate"] .md-typeset h1,
+[data-md-color-scheme="slate"] .md-typeset h2,
+[data-md-color-scheme="slate"] .md-typeset h3,
+[data-md-color-scheme="slate"] .md-typeset h4 {
+  color: #e2e8f0;
 }
 
 [data-md-color-scheme="slate"] .md-typeset code {
