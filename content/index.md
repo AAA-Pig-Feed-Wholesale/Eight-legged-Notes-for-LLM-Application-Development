@@ -39,7 +39,7 @@
   </a>
   <a class="note-card" href="./llm_app_dev_notes_2020_2026_detailed.md">
     <span class="note-tag">Deep Dive</span>
-    <h3>详细笔记</h3>
+    <h3>模型相关八股</h3>
     <p>更适合纵向梳理 2020 到 2026 之间的应用开发脉络。</p>
   </a>
   <a class="note-card" href="./LLM八股.md">
